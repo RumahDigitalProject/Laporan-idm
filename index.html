@@ -42,6 +42,7 @@
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; text-align: right; background: #fff; transition: 0.3s; }
         input:focus { border-color: #1e3c72; outline: none; box-shadow: 0 0 8px rgba(30, 60, 114, 0.2); }
         input[type="date"] { text-align: left; }
+        input[readonly] { cursor: not-allowed; opacity: 0.8; }
         
         .readonly-input { background-color: #f1f3f5; color: #666; font-weight: bold; border: 1px dashed #adb5bd; }
         .auto-calc { background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); color: #000; font-weight: 900; border: none; box-shadow: inset 0 0 5px rgba(255,255,255,0.5); }
@@ -58,7 +59,6 @@
         .grid-hasil { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .full-width { grid-column: span 2; }
 
-        /* MODAL & ANIMASI ROBOT */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal-box { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: scale(0.9); animation: popIn 0.3s forwards; }
         @keyframes popIn { to { transform: scale(1); } }
@@ -75,7 +75,7 @@
     <div id="formView" class="container">
         <h2>Input Laporan T7Z4</h2>
         <div id="serverStatus" class="status-box status-connecting"><div class="spinner"></div> Menghubungkan ke Server...</div>
-        <div class="form-group"><label>Tanggal Laporan</label><input type="date" id="tanggal" onchange="tarikDataOtomatis()"></div>
+        <div class="form-group"><label>Tanggal Laporan (Otomatis)</label><input type="date" id="tanggal" onchange="tarikDataOtomatis()"></div>
         <div class="form-group"><label>Sales Net (Manual)</label><input type="text" id="salesNet" class="format-angka" inputmode="numeric" placeholder="0"></div>
         <div class="form-group"><label>Struk (Manual)</label><input type="text" id="strukHariIni" class="format-angka" inputmode="numeric" placeholder="0"></div>
         <div style="display: flex; gap: 10px; margin-top:20px;">
@@ -95,14 +95,13 @@
             <h3 id="modalTitle">Konfirmasi Keamanan 🔒</h3>
             <input type="password" id="passInput" inputmode="numeric" placeholder="***" style="text-align: center; font-size: 1.5rem; letter-spacing: 10px;">
             <button id="btnSandi" class="btn-utama" onclick="cekSandi()">VERIFIKASI</button>
-            
             <div id="robotFace">🤖</div>
             <div id="loadingAnim" class="loading-track"><div id="loadingBar" class="loading-fill"></div></div>
-            <p id="loadingText" style="display:none; font-size:0.9rem; color:#00529C; font-weight:bold;">Menganalisis Data... (10s)</p>
+            <p id="loadingText" style="display:none; font-size:0.9rem; color:#00529C; font-weight:bold;">Sinkronisasi Selesai...</p>
         </div>
     </div>
 
-    <div id="existModal" class="modal-overlay"><div class="modal-box"><h3>Laporan Sudah Ada! 📂</h3><button class="btn-wa" onclick="tampilkanLaporanLama()">Lihat Laporan 👀</button><button class="btn-kembali" style="margin-top:10px;" onclick="document.getElementById('existModal').style.display='none'">Tutup & Buat Baru</button></div></div>
+    <div id="existModal" class="modal-overlay"><div class="modal-box"><h3>Laporan Sudah Ada! 📂</h3><button class="btn-wa" onclick="tampilkanLaporanLama()">Lihat Laporan 👀</button><button class="btn-kembali" style="margin-top:10px;" onclick="tutupPopUpRiwayat()">Tutup</button></div></div>
     <div id="manualLaluModal" class="modal-overlay"><div class="modal-box"><h3>Data Bulan Lalu Kosong! ⚠️</h3><div class="form-group"><input type="text" id="inputManualSpdLalu" class="format-angka" placeholder="SPD Lalu"></div><div class="form-group"><input type="text" id="inputManualStdLalu" class="format-angka" placeholder="STD Lalu"></div><div class="form-group"><input type="text" id="inputManualApcLalu" class="format-angka" placeholder="APC Lalu"></div><button class="btn-utama" onclick="simpanManualLalu()">LANJUTKAN</button></div></div>
 
     <div id="hasilView" class="container">
@@ -139,7 +138,8 @@
         const KODE_TOKO_PATEN = "T7Z4/MEDOKAN AYU";
         const TARGET_SPD_FIXED = 20115238;
         
-        // AUDIO & ASSET
+        let dataLaporanTersimpan = null;
+        let dataBulanLaluGlobal = { spd: 0, std: 0, apc: 0 };
         const yayAudio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_c6ccf3232f.mp3?filename=yay-6120.mp3");
         const kicauMusic = new Audio("kicau.mp3"); 
         const robotExpressions = ["🤖", "🧐", "⚙️", "🔧", "💻", "📊", "🚀", "✅"];
@@ -149,8 +149,14 @@
         document.querySelectorAll('.format-angka').forEach(i => { i.addEventListener('input', function() { this.value = formatRibuan(this.value.replace(/[^0-9]/g, '')); }); });
 
         window.onload = function() {
-            const t = new Date();
-            document.getElementById('tanggal').value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+            // SET TANGGAL HARI INI SECARA REAL-TIME
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('tanggal').value = `${year}-${month}-${day}`;
+            
+            // LANGSUNG TARIK DATA OTOMATIS BEGITU WEB DIBUKA
             tarikDataOtomatis(); 
         };
 
@@ -162,7 +168,11 @@
 
         function tarikDataOtomatis() {
             const tgl = document.getElementById('tanggal').value;
+            if(!tgl) return;
             setStatus('connecting', 'Sinkronisasi Cloud...', true);
+            document.getElementById('btnSimpan').disabled = true; 
+            document.getElementById('btnSimpan').innerText = "MENUNGGU...";
+            
             fetch(`${SCRIPT_URL}?action=getAutoData&tanggal=${tgl}`, { redirect: "follow" })
                 .then(res => res.json())
                 .then(data => {
@@ -171,11 +181,45 @@
                     document.getElementById('spdBulanLalu').value = formatRibuan(data.spdLalu);
                     document.getElementById('stdBulanLalu').value = formatRibuan(data.stdLalu);
                     document.getElementById('apcBulanLalu').value = formatRibuan(data.apcLalu);
-                    if(data.isSudahAda) { setStatus('success', '✅ Riwayat Ditemukan'); document.getElementById('existModal').style.display='flex'; }
-                    else { setStatus('success', '✅ Siap Buat Laporan'); }
-                    document.getElementById('btnSimpan').disabled = false;
+                    
+                    dataBulanLaluGlobal.spd = data.spdLalu;
+                    dataBulanLaluGlobal.std = data.stdLalu;
+                    dataBulanLaluGlobal.apc = data.apcLalu;
+
+                    if (data.isSudahAda) {
+                        // JIKA LAPORAN SUDAH DIBUAT SEBELUMNYA
+                        dataLaporanTersimpan = data.dataHariIni;
+                        setStatus('success', '✅ Riwayat Ditemukan (Terkunci)'); 
+                        document.getElementById('existModal').style.display='flex';
+                        
+                        // KUNCI FORM INPUT DAN TOMBOL AGAR TIDAK BISA DIEDIT/DISUBMIT GANDA
+                        document.getElementById('salesNet').readOnly = true;
+                        document.getElementById('strukHariIni').readOnly = true;
+                        document.getElementById('btnSimpan').disabled = true;
+                        document.getElementById('btnSimpan').innerText = "LAPORAN TERKUNCI 🔒";
+                    } else {
+                        // JIKA TANGGAL MASIH KOSONG / BELUM ADA LAPORAN
+                        dataLaporanTersimpan = null;
+                        setStatus('success', '✅ Siap Buat Laporan');
+                        
+                        // BUKA KUNCI FORM INPUT (JAGA-JAGA KALAU SEBELUMNYA TERKUNCI)
+                        document.getElementById('salesNet').readOnly = false;
+                        document.getElementById('strukHariIni').readOnly = false;
+                        document.getElementById('salesNet').value = '';
+                        document.getElementById('strukHariIni').value = '';
+                        document.getElementById('btnSimpan').disabled = false;
+                        document.getElementById('btnSimpan').innerText = "PROSES LAPORAN";
+                    }
+                }).catch(() => { 
+                    setStatus('warning', '⚠️ Gunakan Data Manual'); 
+                    document.getElementById('btnSimpan').disabled = false; 
                     document.getElementById('btnSimpan').innerText = "PROSES LAPORAN";
-                }).catch(() => { setStatus('warning', '⚠️ Gunakan Data Manual'); document.getElementById('btnSimpan').disabled = false; });
+                });
+        }
+
+        // --- FUNGSI TUTUP POPUP (FORM TETAP TERKUNCI) ---
+        function tutupPopUpRiwayat() {
+            document.getElementById('existModal').style.display = 'none';
         }
 
         function praProsesLaporan() {
@@ -211,34 +255,21 @@
                 document.getElementById('robotFace').style.display = 'block';
                 document.getElementById('loadingAnim').style.display = 'block';
                 document.getElementById('loadingText').style.display = 'block';
-                
-                // MAIN MUSIK KICAU
-                kicauMusic.currentTime = 0;
-                kicauMusic.play().catch(e => console.log("Audio diblokir browser"));
-
-                let progress = 0;
-                let faceIdx = 0;
-                // Total 10 Detik = 10000ms. Interval 100ms * 100 langkah.
+                kicauMusic.currentTime = 0; kicauMusic.play().catch(e => console.log("Audio diblokir"));
+                let progress = 0; let faceIdx = 0;
                 let timer = setInterval(() => {
-                    progress++;
-                    document.getElementById('loadingBar').style.width = progress + "%";
-                    
-                    // Ganti Ekspresi Robot tiap 12%
-                    if(progress % 12 === 0 && faceIdx < robotExpressions.length - 1) {
-                        faceIdx++;
-                        document.getElementById('robotFace').innerText = robotExpressions[faceIdx];
-                    }
-
-                    if(progress >= 100) {
-                        clearInterval(timer);
-                        kicauMusic.pause(); // MATIKAN MUSIK KICAU
-                        kicauMusic.currentTime = 0;
-                        document.getElementById('robotFace').innerText = "🚀";
-                        setTimeout(() => { document.getElementById('passModal').style.display='none'; eksekusiSimpanLaporan(); }, 500);
-                    }
+                    progress++; document.getElementById('loadingBar').style.width = progress + "%";
+                    if(progress % 12 === 0 && faceIdx < robotExpressions.length - 1) { faceIdx++; document.getElementById('robotFace').innerText = robotExpressions[faceIdx]; }
+                    if(progress >= 100) { clearInterval(timer); kicauMusic.pause(); kicauMusic.currentTime = 0; document.getElementById('robotFace').innerText = "🚀"; setTimeout(() => { document.getElementById('passModal').style.display='none'; eksekusiSimpanLaporan(); }, 500); }
                 }, 100); 
-
             } else { alert("Sandi Salah!"); }
+        }
+
+        function tampilkanLaporanLama() {
+            document.getElementById('existModal').style.display = 'none';
+            document.getElementById('salesNet').value = formatRibuan(dataLaporanTersimpan.salesNet);
+            document.getElementById('strukHariIni').value = formatRibuan(dataLaporanTersimpan.struk);
+            buatTampilanHasil(dataLaporanTersimpan.salesNet, dataLaporanTersimpan.akmSales, dataLaporanTersimpan.spd, dataLaporanTersimpan.struk, dataLaporanTersimpan.akmStruk, dataLaporanTersimpan.std, dataLaporanTersimpan.apc, dataBulanLaluGlobal.spd, dataBulanLaluGlobal.std, dataBulanLaluGlobal.apc);
         }
 
         function eksekusiSimpanLaporan() {
@@ -295,13 +326,10 @@
             window.scrollTo(0,0);
         }
 
-        function tutupLaporan() {
-            yayAudio.play();
-            setTimeout(() => { alert("🎉 Laporan Selesai & Tersimpan!"); location.reload(); }, 300);
-        }
+        function tutupLaporan() { yayAudio.play(); setTimeout(() => { alert("🎉 Laporan Berhasil Ditutup!"); location.reload(); }, 300); }
         function bukaLaporanWA() { document.getElementById('hasilView').style.display = 'none'; document.getElementById('waView').style.display = 'block'; window.scrollTo(0,0); }
         function kembaliKeHasil() { document.getElementById('waView').style.display = 'none'; document.getElementById('hasilView').style.display = 'block'; window.scrollTo(0,0); }
-        function copyKeClipboard() { const t = document.getElementById('teksWa'); t.select(); t.setSelectionRange(0, 99999); navigator.clipboard.writeText(t.value).then(() => alert("Copied!")); }
+        function copyKeClipboard() { const t = document.getElementById('teksWa'); t.select(); t.setSelectionRange(0, 99999); navigator.clipboard.writeText(t.value).then(() => alert("Tersalin!")); }
     </script>
 </body>
 </html>
