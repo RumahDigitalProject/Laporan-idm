@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Laporan Harian T7Z4</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            padding: 10px; 
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+        }
+        
+        /* Tema Anak Muda saat di Halaman Hasil */
+        body.hasil-mode {
+            background: linear-gradient(-45deg, #74ebd5, #9face6, #fbc2eb, #a18cd1);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container { 
+            background-color: rgba(255, 255, 255, 0.95); 
+            padding: 15px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
+            margin-bottom: 20px; 
+            backdrop-filter: blur(10px);
+        }
+        
+        h2 { text-align: center; color: #1e3c72; margin-bottom: 15px; font-size: 1.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Animasi Status Server */
+        .status-box {
+            text-align: center; padding: 8px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .status-connecting { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; animation: pulse 1.5s infinite; }
+        .status-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-warning { background-color: #ffeeba; color: #d39e00; border: 1px solid #ffdf7e; }
+        .status-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        .spinner { width: 15px; height: 15px; border: 3px solid rgba(0,0,0,0.1); border-top-color: currentColor; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-size: 0.8rem; color: #444; font-weight: bold; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; text-align: right; background: #fff; transition: 0.3s; }
+        input:focus { border-color: #1e3c72; outline: none; box-shadow: 0 0 8px rgba(30, 60, 114, 0.2); }
+        input[type="date"] { text-align: left; }
+        
+        .readonly-input { background-color: #f1f3f5; color: #666; font-weight: bold; border: 1px dashed #adb5bd; }
+        
+        /* Highlight Khusus Untuk Dihitung Otomatis */
+        .auto-calc { 
+            background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); 
+            color: #000; 
+            font-weight: 900; 
+            border: none; 
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.5); 
+        }
+        .hasil-manual { background-color: #f8f9fa; color: #333; font-weight: bold; border: 1px solid #ccc; }
+
+        /* Tombol Modern */
+        .btn-utama { width: 100%; background: linear-gradient(to right, #1e3c72, #2a5298); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; }
+        .btn-utama:active { transform: scale(0.98); }
+        .btn-wa { width: 100%; background: linear-gradient(to right, #11998e, #38ef7d); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; cursor: pointer; transition: 0.3s; }
+        .btn-kembali { width: 100%; background: linear-gradient(to right, #ed213a, #93291e); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        
+        .black-divider { border: 0; height: 3px; background: #333; margin: 25px 0; border-radius: 2px;}
+        
+        #hasilView, #waView { display: none; }
+        textarea { width: 100%; height: 380px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.85rem; font-family: monospace; resize: none; margin-bottom: 15px;}
+        .grid-hasil { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .full-width { grid-column: span 2; }
+        .legend { font-size: 0.75rem; color: #1e3c72; text-align: center; margin-bottom: 15px; font-style: italic; font-weight: bold; }
+
+        /* Pop Up Kata Sandi & Loading Bar */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-box {
+            background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: scale(0.9); animation: popIn 0.3s forwards;
+        }
+        @keyframes popIn { to { transform: scale(1); } }
+        .modal-box h3 { margin-bottom: 15px; color: #333; }
+        .modal-box input { text-align: center; font-size: 1.2rem; letter-spacing: 5px; margin-bottom: 15px; }
+        
+        .loading-track {
+            width: 100%; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; display: none; margin: 20px 0;
+        }
+        .loading-fill {
+            height: 100%; width: 0%; background: linear-gradient(to right, #11998e, #38ef7d); border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="formView" class="container">
+        <h2>Input Laporan T7Z4</h2>
+        
+        <div id="serverStatus" class="status-box status-connecting">
+            <div class="spinner"></div> Menghubungkan ke Server...
+        </div>
+
+        <div class="form-group"><label>Tanggal Laporan</label><input type="date" id="tanggal" onchange="tarikDataOtomatis()"></div>
+        
+        <div class="form-group"><label>Sales Net (Manual)</label><input type="text" id="salesNet" class="format-angka" inputmode="numeric" placeholder="0"></div>
+        <div class="form-group"><label>Struk (Manual)</label><input type="text" id="strukHariIni" class="format-angka" inputmode="numeric" placeholder="0"></div>
+        
+        <div style="display: flex; gap: 10px; margin-top:20px;">
+            <div class="form-group" style="flex: 1;"><label>Akm Sales Kmrn</label><input type="text" id="akmSalesKemarin" class="readonly-input" readonly></div>
+            <div class="form-group" style="flex: 1;"><label>Akm Struk Kmrn</label><input type="text" id="akmStrukKemarin" class="readonly-input" readonly></div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;"><label>SPD Lalu</label><input type="text" id="spdBulanLalu" class="readonly-input" readonly></div>
+            <div class="form-group" style="flex: 1;"><label>STD Lalu</label><input type="text" id="stdBulanLalu" class="readonly-input" readonly></div>
+            <div class="form-group" style="flex: 1;"><label>APC Lalu</label><input type="text" id="apcBulanLalu" class="readonly-input" readonly></div>
+        </div>
+        <button class="btn-utama" id="btnSimpan" onclick="bukaModalSandi()" disabled>PROSES LAPORAN</button>
+    </div>
+
+    <div id="passModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modalTitle">Masukkan Kata Sandi</h3>
+            <input type="password" id="passInput" inputmode="numeric" placeholder="***">
+            <button id="btnSandi" class="btn-utama" onclick="cekSandi()">Verifikasi</button>
+            
+            <div id="loadingAnim" class="loading-track">
+                <div id="loadingBar" class="loading-fill"></div>
+            </div>
+            <p id="loadingText" style="display:none; font-size:0.8rem; margin-top:10px; color:#1e3c72; font-weight:bold;">Menyusun Laporan...</p>
+        </div>
+    </div>
+
+    <div id="hasilView" class="container">
+        <h2>Hasil Laporan</h2>
+        <div class="legend">✨ Kolom berwarna pastel dihitung OTOMATIS oleh sistem ✨</div>
+        
+        <div class="grid-hasil">
+            <div class="form-group full-width"><label>Sales Net (Manual)</label><input type="text" id="resSalesNet" class="hasil-manual" readonly></div>
+            <div class="form-group full-width"><label>Akm. Sales</label><input type="text" id="resAkmSales" class="auto-calc" readonly></div>
+            <div class="form-group"><label>SPD</label><input type="text" id="resSpd" class="auto-calc" readonly></div>
+            <div class="form-group"><label>ACH (%)</label><input type="text" id="resAch" class="auto-calc" readonly></div>
+            <div class="form-group"><label>SPD Lalu</label><input type="text" id="resSpdLalu" class="readonly-input" readonly></div>
+            <div class="form-group"><label>Growth (%)</label><input type="text" id="resGrowthSpd" class="auto-calc" readonly></div>
+        </div>
+
+        <hr class="black-divider">
+
+        <div class="grid-hasil">
+            <div class="form-group full-width"><label>Struk (Manual)</label><input type="text" id="resStruk" class="hasil-manual" readonly></div>
+            <div class="form-group full-width"><label>Akm. Struk</label><input type="text" id="resAkmStruk" class="auto-calc" readonly></div>
+            <div class="form-group"><label>STD</label><input type="text" id="resStd" class="auto-calc" readonly></div>
+            <div class="form-group"><label>STD Lalu</label><input type="text" id="resStdLalu" class="readonly-input" readonly></div>
+            <div class="form-group full-width"><label>Growth (%)</label><input type="text" id="resGrowthStd" class="auto-calc" readonly></div>
+        </div>
+
+        <hr class="black-divider">
+
+        <div class="grid-hasil">
+            <div class="form-group"><label>APC</label><input type="text" id="resApc" class="auto-calc" readonly></div>
+            <div class="form-group"><label>APC Lalu</label><input type="text" id="resApcLalu" class="readonly-input" readonly></div>
+            <div class="form-group full-width"><label>Growth (%)</label><input type="text" id="resGrowthApc" class="auto-calc" readonly></div>
+        </div>
+
+        <div style="margin-top: 25px;">
+            <button class="btn-wa" onclick="bukaLaporanWA()">SALIN KE WA 📲</button>
+            <button class="btn-kembali" onclick="tutupLaporan()">TUTUP LAPORAN ❌</button>
+        </div>
+    </div>
+
+    <div id="waView" class="container">
+        <h2>Format Pesan WA</h2>
+        <textarea id="teksWa" readonly></textarea>
+        <button class="btn-utama" onclick="copyKeClipboard()">Copy Pesan WA</button>
+        <button class="btn-kembali" style="margin-top: 10px;" onclick="kembaliKeHasil()">Kembali</button>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLUGybVcGdNb8lGdIROQBWit7k9mc7Qv_03z92fVXRbzJ8H-qrX21pwAJUmknFR_ihRw/exec";
+        const KODE_TOKO_PATEN = "T7Z4/MEDOKAN AYU";
+        const TARGET_SPD_FIXED = 20115238;
+
+        // Audio Konyol (Suara anak-anak bersorak "YAY!")
+        const funnyAudio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_c6ccf3232f.mp3?filename=yay-6120.mp3");
+
+        function formatRibuan(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+        function hapusTitik(s) { return parseInt(s.replace(/\./g, '')) || 0; }
+        
+        document.querySelectorAll('.format-angka').forEach(i => {
+            i.addEventListener('input', function() { this.value = formatRibuan(this.value.replace(/[^0-9]/g, '')); });
+        });
+
+        window.onload = function() {
+            const t = new Date();
+            document.getElementById('tanggal').value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+            tarikDataOtomatis(); 
+        };
+
+        // --- ANIMASI STATUS SERVER ---
+        function setStatus(tipe, pesan, showSpinner = false) {
+            const box = document.getElementById('serverStatus');
+            box.className = `status-box status-${tipe}`;
+            let html = pesan;
+            if(showSpinner) html = `<div class="spinner"></div> ` + pesan;
+            box.innerHTML = html;
+        }
+
+        function tarikDataOtomatis() {
+            const tgl = document.getElementById('tanggal').value;
+            if(!tgl) return;
+            
+            setStatus('connecting', 'Menghubungkan ke server...', true);
+            
+            const btn = document.getElementById('btnSimpan');
+            btn.disabled = true; 
+            btn.innerText = "MEMUAT DATA...";
+            
+            fetch(`${SCRIPT_URL}?action=getAutoData&tanggal=${tgl}`, { redirect: "follow" })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('akmSalesKemarin').value = formatRibuan(data.akmSalesKemarin);
+                    document.getElementById('akmStrukKemarin').value = formatRibuan(data.akmStrukKemarin);
+                    document.getElementById('spdBulanLalu').value = formatRibuan(data.spdLalu);
+                    document.getElementById('stdBulanLalu').value = formatRibuan(data.stdLalu);
+                    document.getElementById('apcBulanLalu').value = formatRibuan(data.apcLalu);
+                    
+                    setStatus('success', '✅ Terhubung! Data siap diproses.');
+                    btn.disabled = false;
+                    btn.innerText = "PROSES LAPORAN";
+                }).catch((error) => {
+                    setStatus('warning', '⚠️ Peringatan: Data bulan lalu kosong di Sheet.');
+                    btn.disabled = false;
+                    btn.innerText = "PROSES LAPORAN";
+                });
+        }
+
+        // --- POPUP PASSWORD & LOADING BAR ---
+        function bukaModalSandi() {
+            if(!document.getElementById('salesNet').value || !document.getElementById('strukHariIni').value){
+                alert("Mohon isi Sales Net dan Struk Hari Ini terlebih dahulu!");
+                return;
+            }
+            document.getElementById('passModal').style.display = 'flex';
+            document.getElementById('passInput').value = '';
+            document.getElementById('passInput').focus();
+            
+            // Reset modal UI if reopened
+            document.getElementById('modalTitle').style.display = 'block';
+            document.getElementById('passInput').style.display = 'inline-block';
+            document.getElementById('btnSandi').style.display = 'inline-block';
+            document.getElementById('loadingAnim').style.display = 'none';
+            document.getElementById('loadingText').style.display = 'none';
+            document.getElementById('loadingBar').style.width = '0%';
+        }
+
+        function cekSandi() {
+            const sandi = document.getElementById('passInput').value;
+            if(sandi === "123") {
+                // Sembunyikan input, jalankan animasi loading
+                document.getElementById('modalTitle').style.display = 'none';
+                document.getElementById('passInput').style.display = 'none';
+                document.getElementById('btnSandi').style.display = 'none';
+                
+                document.getElementById('loadingAnim').style.display = 'block';
+                document.getElementById('loadingText').style.display = 'block';
+                
+                let width = 0;
+                let interval = setInterval(() => {
+                    if (width >= 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            document.getElementById('passModal').style.display = 'none';
+                            eksekusiSimpanLaporan(); // Lanjutkan ke perhitungan
+                        }, 500);
+                    } else {
+                        width += 5;
+                        document.getElementById('loadingBar').style.width = width + '%';
+                    }
+                }, 50); // Kecepatan loading bar
+                
+            } else {
+                alert("⛔ KATA SANDI SALAH! Data gagal diproses, silakan ulangi lagi.");
+                document.getElementById('passInput').value = '';
+                document.getElementById('passInput').focus();
+            }
+        }
+
+        // --- PERHITUNGAN UTAMA ---
+        function eksekusiSimpanLaporan() {
+            const tglVal = new Date(document.getElementById('tanggal').value);
+            const tglHarian = tglVal.getDate();
+            const hariBulan = new Date(tglVal.getFullYear(), tglVal.getMonth() + 1, 0).getDate();
+            const sisaHari = hariBulan - tglHarian; 
+
+            const net = hapusTitik(document.getElementById('salesNet').value);
+            const akmSalesKmrn = hapusTitik(document.getElementById('akmSalesKemarin').value);
+            const struk = hapusTitik(document.getElementById('strukHariIni').value);
+            const akmStrukKmrn = hapusTitik(document.getElementById('akmStrukKemarin').value);
+            const spdLalu = hapusTitik(document.getElementById('spdBulanLalu').value);
+            const stdLalu = hapusTitik(document.getElementById('stdBulanLalu').value);
+            const apcLalu = hapusTitik(document.getElementById('apcBulanLalu').value);
+
+            const targetTotalBulan = TARGET_SPD_FIXED * hariBulan;
+
+            // KELOMPOK SALES
+            const akmSales = net + akmSalesKmrn;
+            const spd = Math.round(akmSales / tglHarian);
+            const achSpd = Math.floor((spd / TARGET_SPD_FIXED) * 100); 
+            const acvSales = Math.floor((akmSales / targetTotalBulan) * 100);
+            const growthSpd = spdLalu > 0 ? Math.round((spd / spdLalu * 100) - 100) : 0;
+            const kurangTarget = targetTotalBulan - akmSales;
+            const kurangPerDay = sisaHari > 0 ? Math.round(kurangTarget / sisaHari) : kurangTarget;
+
+            // KELOMPOK STRUK
+            const akmStruk = struk + akmStrukKmrn;
+            const std = Math.round(akmStruk / tglHarian);
+            const growthStd = stdLalu > 0 ? Math.round((std / stdLalu * 100) - 100) : 0;
+
+            // KELOMPOK APC
+            const apc = std > 0 ? Math.round(spd / std) : 0;
+            const growthApc = apcLalu > 0 ? Math.round((apc / apcLalu * 100) - 100) : 0;
+
+            // Update DOM
+            document.getElementById('resSalesNet').value = formatRibuan(net);
+            document.getElementById('resAkmSales').value = formatRibuan(akmSales);
+            document.getElementById('resSpd').value = formatRibuan(spd);
+            document.getElementById('resAch').value = achSpd + '%';
+            document.getElementById('resSpdLalu').value = formatRibuan(spdLalu);
+            document.getElementById('resGrowthSpd').value = growthSpd + '%';
+            document.getElementById('resStruk').value = formatRibuan(struk);
+            document.getElementById('resAkmStruk').value = formatRibuan(akmStruk);
+            document.getElementById('resStd').value = formatRibuan(std);
+            document.getElementById('resStdLalu').value = formatRibuan(stdLalu);
+            document.getElementById('resGrowthStd').value = growthStd + '%';
+            document.getElementById('resApc').value = formatRibuan(apc);
+            document.getElementById('resApcLalu').value = formatRibuan(apcLalu);
+            document.getElementById('resGrowthApc').value = growthApc + '%';
+
+            // WA Template
+            const teksWA = `LAPORAN  HARIAN TOKO\n\nKode/Nama Toko : ${KODE_TOKO_PATEN}\nTgl : ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}\n———————————— \nSales Net : ${formatRibuan(net)}\nStruk : ${formatRibuan(struk)}\nApc : ${formatRibuan(apc)}\nAkumulasi sales Net : ${formatRibuan(akmSales)}\nTarget total : ${formatRibuan(targetTotalBulan)}\nAcv sales : ${acvSales}%\nkekurangan target : ${formatRibuan(kurangTarget)}\nkekurangan target per day :  ${formatRibuan(kurangPerDay)}\n————————\n- Target SPD : ${formatRibuan(TARGET_SPD_FIXED)}\n- Actual SPD : ${formatRibuan(spd)}\n- % Penc SPD : ${achSpd}%\n- SPD Bulan lalu : ${formatRibuan(spdLalu)}\n- Growth SPD : ${growthSpd}%\n- STD  : ${formatRibuan(std)}\n- APC  : ${formatRibuan(apc)}\nTerimakasihh`;
+            document.getElementById('teksWa').value = teksWA;
+
+            // Ubah Tema ke Mode Anak Muda
+            document.body.classList.add('hasil-mode');
+            
+            // Pindah Halaman
+            document.getElementById('formView').style.display = 'none'; 
+            document.getElementById('hasilView').style.display = 'block'; 
+            window.scrollTo(0,0);
+
+            // Fetch ke Sheet secara background (Diam-diam)
+            fetch(SCRIPT_URL, { 
+                method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ 
+                    tanggal: document.getElementById('tanggal').value, kodeToko: KODE_TOKO_PATEN, target: targetTotalBulan, 
+                    salesNet: net, akmSales: akmSales, spd: spd, struk: struk, akmStruk: akmStruk, std: std, apc: apc 
+                }) 
+            });
+        }
+
+        // --- TOMBOL TUTUP & AUDIO ---
+        function tutupLaporan() {
+            // Mainkan audio konyol
+            funnyAudio.play();
+            
+            // Tampilkan pop up
+            setTimeout(() => {
+                alert("🎉 Terima kasih! Laporan berhasil disimpan dengan aman.");
+                // Muat ulang halaman (Reset)
+                location.reload();
+            }, 300);
+        }
+
+        function bukaLaporanWA() { document.getElementById('hasilView').style.display = 'none'; document.getElementById('waView').style.display = 'block'; window.scrollTo(0,0); }
+        function kembaliKeHasil() { document.getElementById('waView').style.display = 'none'; document.getElementById('hasilView').style.display = 'block'; window.scrollTo(0,0); }
+        function copyKeClipboard() { const t = document.getElementById('teksWa'); t.select(); t.setSelectionRange(0, 99999); navigator.clipboard.writeText(t.value).then(() => alert("Berhasil disalin ke HP!")); }
+    </script>
+</body>
+</html>
+
