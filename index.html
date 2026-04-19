@@ -21,6 +21,27 @@
         }
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
+        /* --- SPLASH SCREEN DENGAN FOTO PRIBADI T7Z4.JPG --- */
+        #splashScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            /* Menggunakan file t7z4.jpg yang diupload di folder yang sama */
+            /* Ditambahkan lapisan gelap transparan agar teks loading tetap jelas */
+            background: linear-gradient(rgba(30,60,114,0.8), rgba(42,82,152,0.8)), url('t7z4.jpg') center/cover;
+            z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease; color: white;
+        }
+        .db-icon { font-size: 4rem; animation: float 2s ease-in-out infinite; margin-bottom: 20px; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        .loading-text { font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; margin-top: 10px; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .progress-container { width: 60%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 10px; margin-top: 20px; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: #38ef7d; box-shadow: 0 0 10px #38ef7d; 
+            /* MODIFIKASI: Animasi loading bar disesuaikan ke 7.8s (sedikit kurang dari 8s agar pas saat fade out) */
+            animation: loadDb 7.8s forwards ease-in-out; 
+        }
+        @keyframes loadDb { 0% { width: 0%; } 50% { width: 60%; } 100% { width: 100%; } }
+
+        /* --- CONTAINER UTAMA --- */
         .container { 
             background-color: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.15); margin-bottom: 20px; backdrop-filter: blur(10px);
@@ -59,6 +80,7 @@
         .grid-hasil { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .full-width { grid-column: span 2; }
 
+        /* MODAL & ANIMASI ROBOT */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal-box { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: scale(0.9); animation: popIn 0.3s forwards; }
         @keyframes popIn { to { transform: scale(1); } }
@@ -68,26 +90,47 @@
         
         .loading-track { width: 100%; height: 15px; background: #eee; border-radius: 10px; overflow: hidden; display: none; margin: 20px 0; border: 1px solid #ddd; }
         .loading-fill { height: 100%; width: 0%; background: linear-gradient(to right, #00529C, #25D366); border-radius: 10px; transition: width 0.1s linear; }
+
+        /* KELAS ANIMASI MUNCUL SATU-SATU */
+        .step-hidden { display: none !important; opacity: 0; transform: translateY(-20px); transition: all 0.5s ease; }
+        .step-visible { display: block !important; animation: slideDown 0.6s ease forwards; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div id="formView" class="container">
+    <div id="splashScreen">
+        <div class="db-icon">🗄️</div>
+        <div class="loading-text">KONEKSI DATABASE T7Z4...</div>
+        <div class="progress-container"><div class="progress-bar"></div></div>
+    </div>
+
+    <div id="formView" class="container" style="display: none;">
         <h2>Input Laporan T7Z4</h2>
         <div id="serverStatus" class="status-box status-connecting"><div class="spinner"></div> Menghubungkan ke Server...</div>
-        <div class="form-group"><label>Tanggal Laporan (Otomatis)</label><input type="date" id="tanggal" onchange="tarikDataOtomatis()"></div>
-        <div class="form-group"><label>Sales Net (Manual)</label><input type="text" id="salesNet" class="format-angka" inputmode="numeric" placeholder="0"></div>
-        <div class="form-group"><label>Struk (Manual)</label><input type="text" id="strukHariIni" class="format-angka" inputmode="numeric" placeholder="0"></div>
-        <div style="display: flex; gap: 10px; margin-top:20px;">
-            <div class="form-group" style="flex: 1;"><label>Akm Sales Kmrn</label><input type="text" id="akmSalesKemarin" class="readonly-input" readonly></div>
-            <div class="form-group" style="flex: 1;"><label>Akm Struk Kmrn</label><input type="text" id="akmStrukKemarin" class="readonly-input" readonly></div>
+        
+        <div class="form-group"><label>Tanggal Laporan</label><input type="date" id="tanggal" onchange="tarikDataOtomatis()"></div>
+        
+        <div id="wrapSalesNet">
+            <div class="form-group"><label>Sales Net (Manual)</label><input type="tel" id="salesNet" class="format-angka" inputmode="numeric" placeholder="Ketik disini..."></div>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <div class="form-group" style="flex: 1;"><label>SPD Lalu</label><input type="text" id="spdBulanLalu" class="readonly-input" readonly></div>
-            <div class="form-group" style="flex: 1;"><label>STD Lalu</label><input type="text" id="stdBulanLalu" class="readonly-input" readonly></div>
-            <div class="form-group" style="flex: 1;"><label>APC Lalu</label><input type="text" id="apcBulanLalu" class="readonly-input" readonly></div>
+
+        <div id="wrapStruk" class="step-hidden">
+            <div class="form-group"><label>Struk (Manual)</label><input type="tel" id="strukHariIni" class="format-angka" inputmode="numeric" placeholder="Ketik disini..."></div>
         </div>
-        <button class="btn-utama" id="btnSimpan" onclick="praProsesLaporan()" disabled>PROSES LAPORAN</button>
+
+        <div id="wrapSystemData" class="step-hidden">
+            <div style="display: flex; gap: 10px; margin-top:20px;">
+                <div class="form-group" style="flex: 1;"><label>Akm Sales Kmrn</label><input type="text" id="akmSalesKemarin" class="readonly-input" readonly></div>
+                <div class="form-group" style="flex: 1;"><label>Akm Struk Kmrn</label><input type="text" id="akmStrukKemarin" class="readonly-input" readonly></div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;"><label>SPD Lalu</label><input type="text" id="spdBulanLalu" class="readonly-input" readonly></div>
+                <div class="form-group" style="flex: 1;"><label>STD Lalu</label><input type="text" id="stdBulanLalu" class="readonly-input" readonly></div>
+                <div class="form-group" style="flex: 1;"><label>APC Lalu</label><input type="text" id="apcBulanLalu" class="readonly-input" readonly></div>
+            </div>
+            <button class="btn-utama" id="btnSimpan" onclick="praProsesLaporan()" disabled>PROSES LAPORAN</button>
+        </div>
     </div>
 
     <div id="passModal" class="modal-overlay">
@@ -146,18 +189,59 @@
 
         function formatRibuan(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
         function hapusTitik(s) { return parseInt(s.replace(/\./g, '')) || 0; }
-        document.querySelectorAll('.format-angka').forEach(i => { i.addEventListener('input', function() { this.value = formatRibuan(this.value.replace(/[^0-9]/g, '')); }); });
+        
+        // Listener Form Progresif Canggih (Muncul & Menghilang)
+        document.querySelectorAll('.format-angka').forEach(i => { 
+            i.addEventListener('input', function() { 
+                // Regex paksa buang huruf, hanya sisa angka
+                this.value = formatRibuan(this.value.replace(/[^0-9]/g, '')); 
+                cekKemajuanForm(); 
+            }); 
+        });
+
+        // FUNGSI CEK FORM MUNCUL/HILANG OTOMATIS
+        function cekKemajuanForm() {
+            const net = document.getElementById('salesNet').value;
+            const struk = document.getElementById('strukHariIni').value;
+
+            // Logika Kotak Struk
+            if(net.length > 0) {
+                document.getElementById('wrapStruk').classList.remove('step-hidden');
+                document.getElementById('wrapStruk').classList.add('step-visible');
+            } else {
+                document.getElementById('wrapStruk').classList.remove('step-visible');
+                document.getElementById('wrapStruk').classList.add('step-hidden');
+                document.getElementById('strukHariIni').value = ''; // Reset struk kalau sales net dihapus
+            }
+
+            // Logika System Data & Tombol
+            if(net.length > 0 && struk.length > 0 && document.getElementById('strukHariIni').value.length > 0) {
+                document.getElementById('wrapSystemData').classList.remove('step-hidden');
+                document.getElementById('wrapSystemData').classList.add('step-visible');
+            } else {
+                document.getElementById('wrapSystemData').classList.remove('step-visible');
+                document.getElementById('wrapSystemData').classList.add('step-hidden');
+            }
+        }
 
         window.onload = function() {
-            // SET TANGGAL HARI INI SECARA REAL-TIME
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             document.getElementById('tanggal').value = `${year}-${month}-${day}`;
             
-            // LANGSUNG TARIK DATA OTOMATIS BEGITU WEB DIBUKA
-            tarikDataOtomatis(); 
+            tarikDataOtomatisDibalikLayar(); 
+
+            // MODIFIKASI: SPLASH SCREEN LOGIC (Tunggu 8 Detik)
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    document.getElementById('formView').style.display = 'block';
+                }, 500); // Tunggu animasi pudar selesai
+            }, 8000); // 8000ms = 8 Detik Pas
         };
 
         function setStatus(tipe, pesan, showSpinner = false) {
@@ -166,9 +250,16 @@
             box.innerHTML = showSpinner ? `<div class="spinner"></div> ${pesan}` : pesan;
         }
 
-        function tarikDataOtomatis() {
+        function tarikDataOtomatisDibalikLayar() {
             const tgl = document.getElementById('tanggal').value;
             if(!tgl) return;
+            
+            // Sembunyikan form bagian bawah setiap ganti tanggal
+            document.getElementById('wrapStruk').className = 'step-hidden';
+            document.getElementById('wrapSystemData').className = 'step-hidden';
+            document.getElementById('salesNet').value = '';
+            document.getElementById('strukHariIni').value = '';
+
             setStatus('connecting', 'Sinkronisasi Cloud...', true);
             document.getElementById('btnSimpan').disabled = true; 
             document.getElementById('btnSimpan').innerText = "MENUNGGU...";
@@ -187,26 +278,24 @@
                     dataBulanLaluGlobal.apc = data.apcLalu;
 
                     if (data.isSudahAda) {
-                        // JIKA LAPORAN SUDAH DIBUAT SEBELUMNYA
                         dataLaporanTersimpan = data.dataHariIni;
                         setStatus('success', '✅ Riwayat Ditemukan (Terkunci)'); 
                         document.getElementById('existModal').style.display='flex';
                         
-                        // KUNCI FORM INPUT DAN TOMBOL AGAR TIDAK BISA DIEDIT/DISUBMIT GANDA
                         document.getElementById('salesNet').readOnly = true;
                         document.getElementById('strukHariIni').readOnly = true;
                         document.getElementById('btnSimpan').disabled = true;
                         document.getElementById('btnSimpan').innerText = "LAPORAN TERKUNCI 🔒";
+                        
+                        // Munculkan semua form dalam keadaan terkunci
+                        document.getElementById('wrapStruk').className = 'step-visible';
+                        document.getElementById('wrapSystemData').className = 'step-visible';
                     } else {
-                        // JIKA TANGGAL MASIH KOSONG / BELUM ADA LAPORAN
                         dataLaporanTersimpan = null;
                         setStatus('success', '✅ Siap Buat Laporan');
                         
-                        // BUKA KUNCI FORM INPUT (JAGA-JAGA KALAU SEBELUMNYA TERKUNCI)
                         document.getElementById('salesNet').readOnly = false;
                         document.getElementById('strukHariIni').readOnly = false;
-                        document.getElementById('salesNet').value = '';
-                        document.getElementById('strukHariIni').value = '';
                         document.getElementById('btnSimpan').disabled = false;
                         document.getElementById('btnSimpan').innerText = "PROSES LAPORAN";
                     }
@@ -217,10 +306,8 @@
                 });
         }
 
-        // --- FUNGSI TUTUP POPUP (FORM TETAP TERKUNCI) ---
-        function tutupPopUpRiwayat() {
-            document.getElementById('existModal').style.display = 'none';
-        }
+        function tarikDataOtomatis() { tarikDataOtomatisDibalikLayar(); }
+        function tutupPopUpRiwayat() { document.getElementById('existModal').style.display = 'none'; }
 
         function praProsesLaporan() {
             if(!document.getElementById('salesNet').value || !document.getElementById('strukHariIni').value) { alert("Lengkapi data!"); return; }
