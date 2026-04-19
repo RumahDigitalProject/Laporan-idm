@@ -58,7 +58,7 @@
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; text-align: right; background: #fff; transition: 0.3s; }
         input:focus { border-color: #1e3c72; outline: none; box-shadow: 0 0 8px rgba(30, 60, 114, 0.2); }
         input[type="date"] { text-align: left; }
-        input[readonly] { cursor: not-allowed; opacity: 0.8; }
+        input[readonly] { cursor: not-allowed; opacity: 0.8; background-color: #e9ecef; }
         
         .readonly-input { background-color: #f1f3f5; color: #666; font-weight: bold; border: 1px dashed #adb5bd; }
         .auto-calc { background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); color: #000; font-weight: 900; border: none; box-shadow: inset 0 0 5px rgba(255,255,255,0.5); }
@@ -179,7 +179,6 @@
         let dataLaporanTersimpan = null;
         let dataBulanLaluGlobal = { spd: 0, std: 0, apc: 0 };
         
-        // Setup Audio
         const yayAudio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_c6ccf3232f.mp3?filename=yay-6120.mp3");
         const kicauMusic = new Audio("kicau.mp3"); 
         const robotExpressions = ["🤖", "🧐", "⚙️", "🔧", "💻", "📊", "🚀", "✅"];
@@ -198,6 +197,7 @@
             const net = document.getElementById('salesNet').value;
             const struk = document.getElementById('strukHariIni').value;
 
+            // Logika kemunculan otomatis kolom
             if(net.length > 0) {
                 document.getElementById('wrapStruk').classList.remove('step-hidden');
                 document.getElementById('wrapStruk').classList.add('step-visible');
@@ -225,6 +225,7 @@
             
             tarikDataOtomatisDibalikLayar(); 
 
+            // LOADING SPLASH SCREEN 8 DETIK
             setTimeout(() => {
                 const splash = document.getElementById('splashScreen');
                 splash.style.opacity = '0';
@@ -245,6 +246,7 @@
             const tgl = document.getElementById('tanggal').value;
             if(!tgl) return;
             
+            // Bersihkan form setiap cek tgl baru
             document.getElementById('wrapStruk').className = 'step-hidden';
             document.getElementById('wrapSystemData').className = 'step-hidden';
             document.getElementById('salesNet').value = '';
@@ -272,11 +274,16 @@
                         setStatus('success', '✅ Riwayat Ditemukan (Terkunci)'); 
                         document.getElementById('existModal').style.display='flex';
                         
+                        // ISI NILAI DARI LAPORAN YANG SUDAH PERNAH DIBUAT
+                        document.getElementById('salesNet').value = formatRibuan(dataLaporanTersimpan.salesNet);
+                        document.getElementById('strukHariIni').value = formatRibuan(dataLaporanTersimpan.struk);
+
                         document.getElementById('salesNet').readOnly = true;
                         document.getElementById('strukHariIni').readOnly = true;
                         document.getElementById('btnSimpan').disabled = true;
                         document.getElementById('btnSimpan').innerText = "LAPORAN TERKUNCI 🔒";
                         
+                        // Munculkan kolom karena datanya sudah ada
                         document.getElementById('wrapStruk').className = 'step-visible';
                         document.getElementById('wrapSystemData').className = 'step-visible';
                     } else {
@@ -332,7 +339,6 @@
                 document.getElementById('loadingAnim').style.display = 'block';
                 document.getElementById('loadingText').style.display = 'block';
                 
-                // Set volume player maksimal (Catatan: Volume fisik perangkat tetap menentukan hasil akhir suara)
                 kicauMusic.volume = 1.0;
                 kicauMusic.currentTime = 0; 
                 kicauMusic.play().catch(e => console.log("Audio diblokir"));
@@ -348,8 +354,7 @@
 
         function tampilkanLaporanLama() {
             document.getElementById('existModal').style.display = 'none';
-            document.getElementById('salesNet').value = formatRibuan(dataLaporanTersimpan.salesNet);
-            document.getElementById('strukHariIni').value = formatRibuan(dataLaporanTersimpan.struk);
+            // Data sudah otomatis diisi di kolom input, langsung render hasil
             buatTampilanHasil(dataLaporanTersimpan.salesNet, dataLaporanTersimpan.akmSales, dataLaporanTersimpan.spd, dataLaporanTersimpan.struk, dataLaporanTersimpan.akmStruk, dataLaporanTersimpan.std, dataLaporanTersimpan.apc, dataBulanLaluGlobal.spd, dataBulanLaluGlobal.std, dataBulanLaluGlobal.apc);
         }
 
@@ -363,12 +368,21 @@
             const apcLalu = hapusTitik(document.getElementById('apcBulanLalu').value);
             const tglVal = new Date(document.getElementById('tanggal').value);
             const tglHarian = tglVal.getDate();
+            
             const akmSales = net + akmSalesKmrn;
             const spd = Math.round(akmSales / tglHarian);
             const akmStruk = struk + akmStrukKmrn;
             const std = Math.round(akmStruk / tglHarian);
             const apc = std > 0 ? Math.round(spd / std) : 0;
+            
             buatTampilanHasil(net, akmSales, spd, struk, akmStruk, std, apc, spdLalu, stdLalu, apcLalu);
+            
+            // Kunci inputan setelah sukses submit agar kalau kembali tidak diedit lagi
+            document.getElementById('salesNet').readOnly = true;
+            document.getElementById('strukHariIni').readOnly = true;
+            document.getElementById('btnSimpan').disabled = true;
+            document.getElementById('btnSimpan').innerText = "LAPORAN TERKUNCI 🔒";
+
             const hariBulan = new Date(tglVal.getFullYear(), tglVal.getMonth() + 1, 0).getDate();
             fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ tanggal: document.getElementById('tanggal').value, kodeToko: KODE_TOKO_PATEN, target: TARGET_SPD_FIXED * hariBulan, salesNet: net, akmSales: akmSales, spd: spd, struk: struk, akmStruk: akmStruk, std: std, apc: apc }) });
         }
@@ -399,18 +413,28 @@
             document.getElementById('resApc').value = formatRibuan(apc);
             document.getElementById('resApcLalu').value = formatRibuan(apcLalu);
             document.getElementById('resGrowthApc').value = growthApc + '%';
+            
             const teksWA = `LAPORAN HARIAN TOKO\n\nKode/Nama Toko : ${KODE_TOKO_PATEN}\nTgl : ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}\n———————————— \nSales Net : ${formatRibuan(net)}\nStruk : ${formatRibuan(struk)}\nApc : ${formatRibuan(apc)}\nAkumulasi sales Net : ${formatRibuan(akmSales)}\nTarget total : ${formatRibuan(targetTotalBulan)}\nAcv sales : ${acvSales}%\nkekurangan target : ${formatRibuan(kurangTarget)}\nkekurangan target per day : ${formatRibuan(kurangPerDay)}\n————————\n- Target SPD : ${formatRibuan(TARGET_SPD_FIXED)}\n- Actual SPD : ${formatRibuan(spd)}\n- % Penc SPD : ${achSpd}%\n- SPD Bulan lalu : ${formatRibuan(spdLalu)}\n- Growth SPD : ${growthSpd}%\n- STD : ${formatRibuan(std)}\n- APC : ${formatRibuan(apc)}\nTerimakasihh`;
             document.getElementById('teksWa').value = teksWA;
+            
             document.body.classList.add('hasil-mode');
             document.getElementById('formView').style.display = 'none'; 
             document.getElementById('hasilView').style.display = 'block'; 
             window.scrollTo(0,0);
         }
 
+        // FUNGSI TUTUP TANPA RELOAD (Tidak Ada Loading Awal Lagi)
         function tutupLaporan() { 
             yayAudio.volume = 1.0; 
             yayAudio.play(); 
-            setTimeout(() => { alert("🎉 Laporan Berhasil Ditutup!"); location.reload(); }, 300); 
+            setTimeout(() => { 
+                alert("🎉 Laporan Berhasil Ditutup!"); 
+                // Hanya menyembunyikan halaman hasil, kembali ke form yang sudah terkunci
+                document.getElementById('hasilView').style.display = 'none'; 
+                document.getElementById('formView').style.display = 'block'; 
+                document.body.classList.remove('hasil-mode');
+                window.scrollTo(0,0); 
+            }, 300); 
         }
         
         function bukaLaporanWA() { document.getElementById('hasilView').style.display = 'none'; document.getElementById('waView').style.display = 'block'; window.scrollTo(0,0); }
@@ -419,4 +443,3 @@
     </script>
 </body>
 </html>
-
