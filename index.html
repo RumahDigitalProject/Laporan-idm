@@ -24,8 +24,6 @@
         /* --- SPLASH SCREEN DENGAN FOTO PRIBADI T7Z4.JPG --- */
         #splashScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            /* Menggunakan file t7z4.jpg yang diupload di folder yang sama */
-            /* Ditambahkan lapisan gelap transparan agar teks loading tetap jelas */
             background: linear-gradient(rgba(30,60,114,0.8), rgba(42,82,152,0.8)), url('t7z4.jpg') center/cover;
             z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: opacity 0.5s ease; color: white;
@@ -35,10 +33,7 @@
         .loading-text { font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; margin-top: 10px; animation: blink 1.5s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .progress-container { width: 60%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 10px; margin-top: 20px; overflow: hidden; }
-        .progress-bar { width: 0%; height: 100%; background: #38ef7d; box-shadow: 0 0 10px #38ef7d; 
-            /* MODIFIKASI: Animasi loading bar disesuaikan ke 7.8s (sedikit kurang dari 8s agar pas saat fade out) */
-            animation: loadDb 7.8s forwards ease-in-out; 
-        }
+        .progress-bar { width: 0%; height: 100%; background: #38ef7d; box-shadow: 0 0 10px #38ef7d; animation: loadDb 7.8s forwards ease-in-out; }
         @keyframes loadDb { 0% { width: 0%; } 50% { width: 60%; } 100% { width: 100%; } }
 
         /* --- CONTAINER UTAMA --- */
@@ -183,6 +178,8 @@
         
         let dataLaporanTersimpan = null;
         let dataBulanLaluGlobal = { spd: 0, std: 0, apc: 0 };
+        
+        // Setup Audio
         const yayAudio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_c6ccf3232f.mp3?filename=yay-6120.mp3");
         const kicauMusic = new Audio("kicau.mp3"); 
         const robotExpressions = ["🤖", "🧐", "⚙️", "🔧", "💻", "📊", "🚀", "✅"];
@@ -190,31 +187,26 @@
         function formatRibuan(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
         function hapusTitik(s) { return parseInt(s.replace(/\./g, '')) || 0; }
         
-        // Listener Form Progresif Canggih (Muncul & Menghilang)
         document.querySelectorAll('.format-angka').forEach(i => { 
             i.addEventListener('input', function() { 
-                // Regex paksa buang huruf, hanya sisa angka
                 this.value = formatRibuan(this.value.replace(/[^0-9]/g, '')); 
                 cekKemajuanForm(); 
             }); 
         });
 
-        // FUNGSI CEK FORM MUNCUL/HILANG OTOMATIS
         function cekKemajuanForm() {
             const net = document.getElementById('salesNet').value;
             const struk = document.getElementById('strukHariIni').value;
 
-            // Logika Kotak Struk
             if(net.length > 0) {
                 document.getElementById('wrapStruk').classList.remove('step-hidden');
                 document.getElementById('wrapStruk').classList.add('step-visible');
             } else {
                 document.getElementById('wrapStruk').classList.remove('step-visible');
                 document.getElementById('wrapStruk').classList.add('step-hidden');
-                document.getElementById('strukHariIni').value = ''; // Reset struk kalau sales net dihapus
+                document.getElementById('strukHariIni').value = ''; 
             }
 
-            // Logika System Data & Tombol
             if(net.length > 0 && struk.length > 0 && document.getElementById('strukHariIni').value.length > 0) {
                 document.getElementById('wrapSystemData').classList.remove('step-hidden');
                 document.getElementById('wrapSystemData').classList.add('step-visible');
@@ -233,15 +225,14 @@
             
             tarikDataOtomatisDibalikLayar(); 
 
-            // MODIFIKASI: SPLASH SCREEN LOGIC (Tunggu 8 Detik)
             setTimeout(() => {
                 const splash = document.getElementById('splashScreen');
                 splash.style.opacity = '0';
                 setTimeout(() => {
                     splash.style.display = 'none';
                     document.getElementById('formView').style.display = 'block';
-                }, 500); // Tunggu animasi pudar selesai
-            }, 8000); // 8000ms = 8 Detik Pas
+                }, 500); 
+            }, 8000); 
         };
 
         function setStatus(tipe, pesan, showSpinner = false) {
@@ -254,7 +245,6 @@
             const tgl = document.getElementById('tanggal').value;
             if(!tgl) return;
             
-            // Sembunyikan form bagian bawah setiap ganti tanggal
             document.getElementById('wrapStruk').className = 'step-hidden';
             document.getElementById('wrapSystemData').className = 'step-hidden';
             document.getElementById('salesNet').value = '';
@@ -287,7 +277,6 @@
                         document.getElementById('btnSimpan').disabled = true;
                         document.getElementById('btnSimpan').innerText = "LAPORAN TERKUNCI 🔒";
                         
-                        // Munculkan semua form dalam keadaan terkunci
                         document.getElementById('wrapStruk').className = 'step-visible';
                         document.getElementById('wrapSystemData').className = 'step-visible';
                     } else {
@@ -342,7 +331,12 @@
                 document.getElementById('robotFace').style.display = 'block';
                 document.getElementById('loadingAnim').style.display = 'block';
                 document.getElementById('loadingText').style.display = 'block';
-                kicauMusic.currentTime = 0; kicauMusic.play().catch(e => console.log("Audio diblokir"));
+                
+                // Set volume player maksimal (Catatan: Volume fisik perangkat tetap menentukan hasil akhir suara)
+                kicauMusic.volume = 1.0;
+                kicauMusic.currentTime = 0; 
+                kicauMusic.play().catch(e => console.log("Audio diblokir"));
+                
                 let progress = 0; let faceIdx = 0;
                 let timer = setInterval(() => {
                     progress++; document.getElementById('loadingBar').style.width = progress + "%";
@@ -413,10 +407,16 @@
             window.scrollTo(0,0);
         }
 
-        function tutupLaporan() { yayAudio.play(); setTimeout(() => { alert("🎉 Laporan Berhasil Ditutup!"); location.reload(); }, 300); }
+        function tutupLaporan() { 
+            yayAudio.volume = 1.0; 
+            yayAudio.play(); 
+            setTimeout(() => { alert("🎉 Laporan Berhasil Ditutup!"); location.reload(); }, 300); 
+        }
+        
         function bukaLaporanWA() { document.getElementById('hasilView').style.display = 'none'; document.getElementById('waView').style.display = 'block'; window.scrollTo(0,0); }
         function kembaliKeHasil() { document.getElementById('waView').style.display = 'none'; document.getElementById('hasilView').style.display = 'block'; window.scrollTo(0,0); }
         function copyKeClipboard() { const t = document.getElementById('teksWa'); t.select(); t.setSelectionRange(0, 99999); navigator.clipboard.writeText(t.value).then(() => alert("Tersalin!")); }
     </script>
 </body>
 </html>
+
