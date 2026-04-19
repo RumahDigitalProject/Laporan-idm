@@ -116,8 +116,8 @@
 
         <div id="wrapSystemData" class="step-hidden">
             <div style="display: flex; gap: 10px; margin-top:20px;">
-                <div class="form-group" style="flex: 1;"><label>Akm Sales Kmrn</label><input type="text" id="akmSalesKemarin" class="readonly-input" readonly></div>
-                <div class="form-group" style="flex: 1;"><label>Akm Struk Kmrn</label><input type="text" id="akmStrukKemarin" class="readonly-input" readonly></div>
+                <div class="form-group" style="flex: 1;"><label>Akm Sales Kemarin</label><input type="text" id="akmSalesKemarin" class="readonly-input" readonly></div>
+                <div class="form-group" style="flex: 1;"><label>Akm Struk Kemarin</label><input type="text" id="akmStrukKemarin" class="readonly-input" readonly></div>
             </div>
             <div style="display: flex; gap: 10px;">
                 <div class="form-group" style="flex: 1;"><label>SPD Lalu</label><input type="text" id="spdBulanLalu" class="readonly-input" readonly></div>
@@ -135,7 +135,7 @@
             <button id="btnSandi" class="btn-utama" onclick="cekSandi()">VERIFIKASI</button>
             <div id="robotFace">🤖</div>
             <div id="loadingAnim" class="loading-track"><div id="loadingBar" class="loading-fill"></div></div>
-            <p id="loadingText" style="display:none; font-size:0.9rem; color:#00529C; font-weight:bold;">Sinkronisasi Selesai...</p>
+            <p id="loadingText" style="display:none; font-size:0.9rem; color:#00529C; font-weight:bold;">Sabar Cak...</p>
         </div>
     </div>
 
@@ -143,7 +143,7 @@
     <div id="manualLaluModal" class="modal-overlay"><div class="modal-box"><h3>Data Bulan Lalu Kosong! ⚠️</h3><div class="form-group"><input type="text" id="inputManualSpdLalu" class="format-angka" placeholder="SPD Lalu"></div><div class="form-group"><input type="text" id="inputManualStdLalu" class="format-angka" placeholder="STD Lalu"></div><div class="form-group"><input type="text" id="inputManualApcLalu" class="format-angka" placeholder="APC Lalu"></div><button class="btn-utama" onclick="simpanManualLalu()">LANJUTKAN</button></div></div>
 
     <div id="hasilView" class="container">
-        <h2>Laporan Selesai! ✨</h2>
+        <h2>Laporan Selesai Dibuat! ✨</h2>
         <div class="grid-hasil">
             <div class="form-group full-width"><label>Sales Net</label><input type="text" id="resSalesNet" class="hasil-manual" readonly></div>
             <div class="form-group full-width"><label>Akm. Sales</label><input type="text" id="resAkmSales" class="auto-calc" readonly></div>
@@ -233,7 +233,7 @@
                     splash.style.display = 'none';
                     document.getElementById('formView').style.display = 'block';
                 }, 500); 
-            }, 8000); 
+            }, 5000); 
         };
 
         function setStatus(tipe, pesan, showSpinner = false) {
