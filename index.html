@@ -224,7 +224,20 @@
         </div>
     </div>
 
-    <div id="existModal" class="modal-overlay"><div class="modal-box"><h3>Laporan Sudah Ada! 📂</h3><button class="btn-wa" onclick="tampilkanLaporanLama()">Lihat Laporan 👀</button><button class="btn-kembali" style="margin-top:10px;" onclick="tutupPopUpRiwayat()">Tutup</button></div></div>
+    <div id="existModal" class="modal-overlay">
+        <div class="modal-box" style="border: 2px solid #00529C;">
+            <h3 style="color:#00529C; margin-bottom: 10px;">DATA DITEMUKAN! 📂</h3>
+            <p style="font-size:0.9rem; color:#555; margin-bottom:15px; font-weight: bold;">
+                Laporan untuk tanggal ini sudah tersimpan.
+            </p>
+            <p style="font-size:0.8rem; color:#555; margin-bottom:15px;">
+                Sistem telah mengunci form ini untuk mencegah duplikasi. Anda dapat melihat kembali atau menutup pop-up ini.
+            </p>
+            <button class="btn-wa" onclick="tampilkanLaporanLama()">LIHAT LAPORAN 👀</button>
+            <button class="btn-kembali" style="margin-top:10px;" onclick="tutupPopUpRiwayat()">TUTUP</button>
+        </div>
+    </div>
+    
     <div id="manualLaluModal" class="modal-overlay"><div class="modal-box"><h3>Data Bulan Lalu Kosong! ⚠️</h3><div class="form-group"><input type="tel" id="inputManualSpdLalu" class="format-angka" inputmode="numeric" placeholder="SPD Lalu"></div><div class="form-group"><input type="tel" id="inputManualStdLalu" class="format-angka" inputmode="numeric" placeholder="STD Lalu"></div><div class="form-group"><input type="tel" id="inputManualApcLalu" class="format-angka" inputmode="numeric" placeholder="APC Lalu"></div><button class="btn-utama" onclick="simpanManualLalu()">LANJUTKAN</button></div></div>
 
     <div id="hasilView" class="box-section" style="margin: 10px; max-width: 600px; margin-left: auto; margin-right: auto;">
@@ -264,6 +277,10 @@
         let dataLaporanTersimpan = null;
         let dataBulanLaluGlobal = { spd: 0, std: 0, apc: 0 };
         
+        // VARIABEL PENAHAN POPUP AGAR TIDAK MUNCUL DI TENGAH LOADING
+        let isInitialLoad = true;
+        let pendingModal = null; 
+        
         const yayAudio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_c6ccf3232f.mp3?filename=yay-6120.mp3");
         const kicauMusic = new Audio("kicau.mp3"); 
         const robotExpressions = ["🤖", "🧐", "⚙️", "🔧", "💻", "📊", "🚀", "✅"];
@@ -274,7 +291,6 @@
         // Listener Form Progresif
         document.querySelectorAll('.format-angka').forEach(i => { 
             i.addEventListener('input', function() { 
-                // Regex paksa buang huruf, murni angka
                 this.value = formatRibuan(this.value.replace(/[^0-9]/g, '')); 
                 cekKemajuanForm(); 
             }); 
@@ -285,6 +301,7 @@
             const net = document.getElementById('salesNet').value;
             const struk = document.getElementById('strukHariIni').value;
 
+            // Logika Kotak Struk
             if(net.length > 0) {
                 if(document.getElementById('wrapStruk').classList.contains('step-hidden') || document.getElementById('wrapStruk').classList.contains('exit-3')){
                     document.getElementById('wrapStruk').className = 'box-section enter-4'; // Masuk dari Kanan
@@ -297,6 +314,7 @@
                 document.getElementById('strukHariIni').value = ''; 
             }
 
+            // Logika System Data & Tombol
             if(net.length > 0 && struk.length > 0) {
                 if(document.getElementById('wrapSystemData').classList.contains('step-hidden') || document.getElementById('wrapSystemData').classList.contains('exit-2')){
                     document.getElementById('wrapSystemData').className = 'box-section enter-1'; // Masuk dari Bawah
@@ -313,6 +331,7 @@
             const today = new Date();
             document.getElementById('tanggal').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             
+            // Tarik Data (Pop-up akan ditahan oleh isInitialLoad = true)
             tarikDataOtomatisDibalikLayar(); 
 
             // LOGIKA TERMINAL HACKER JALAN SANGAT CEPAT 
@@ -328,7 +347,7 @@
                 line.innerText = "> " + logs[Math.floor(Math.random() * logs.length)] + " 0x" + Math.floor(Math.random()*9999).toString(16).toUpperCase();
                 term.appendChild(line);
                 if(term.childElementCount > 8) term.removeChild(term.firstChild); 
-            }, 50); // Cepat tanpa jeda
+            }, 50);
 
             // LOGIKA ANIMASI KELUAR LURUS ACAK (SPLASH 5 DETIK SAJA)
             setTimeout(() => {
@@ -350,7 +369,7 @@
                     document.body.classList.add('form-mode'); // Aktifkan Blur
                     fView.style.pointerEvents = 'none'; // Kunci layar
                     
-                    // 2. KILAS BALIK (PREVIEW MEMORI) HANYA 1 DETIK
+                    // 2. KILAS BALIK (PREVIEW MEMORI) 1 DETIK SAJA
                     let yest = new Date(); yest.setDate(yest.getDate() - 1);
                     document.getElementById('tanggal').value = `${yest.getFullYear()}-${String(yest.getMonth() + 1).padStart(2, '0')}-${String(yest.getDate()).padStart(2, '0')}`;
                     
@@ -377,10 +396,10 @@
                         setTimeout(() => {
                             // Kembalikan ke Hari Ini
                             document.getElementById('tanggal').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                            
+                            // Bersihkan form SEBELUM menerapkan status UI aslinya
                             document.getElementById('salesNet').value = '';
                             document.getElementById('strukHariIni').value = '';
-                            
-                            // Sembunyikan bagian bawah
                             document.getElementById('wrapStruk').className = 'box-section step-hidden';
                             document.getElementById('wrapSystemData').className = 'box-section step-hidden';
                             
@@ -388,7 +407,16 @@
                             document.getElementById('wrapTanggal').className = 'box-section enter-2'; // Dari Atas
                             setTimeout(() => {
                                 document.getElementById('wrapSalesNet').className = 'box-section enter-3'; // Dari Kiri
-                                fView.style.pointerEvents = 'auto'; // Buka kunci
+                                fView.style.pointerEvents = 'auto'; // Buka kunci layar
+                                
+                                // === FINAL: LEPASKAN PENAHAN POPUP SETELAH LOADING SELESAI ===
+                                isInitialLoad = false; 
+                                if (pendingModal) {
+                                    terapkanStatusUI(pendingModal);
+                                } else {
+                                    terapkanStatusUI('normal');
+                                }
+
                             }, 300);
 
                         }, 800); // Waktu nunggu hilang lurus
@@ -396,7 +424,7 @@
                     }, 1000); // DURASI KILAS BALIK HANYA 1 DETIK
 
                 }, 800); 
-            }, 5000); // DURASI SPLASH DIPERSINGKAT JADI 5 DETIK
+            }, 5000); // DURASI SPLASH 5 DETIK
         };
 
         function setStatus(tipe, pesan, showSpinner = false) {
@@ -405,14 +433,49 @@
             box.innerHTML = showSpinner ? `<div class="spinner"></div> ${pesan}` : pesan;
         }
 
+        // FUNGSI UNTUK MENERAPKAN KUNCI FORM & MEMUNCULKAN POPUP
+        function terapkanStatusUI(action) {
+            if (action === 'block') {
+                document.getElementById('blockModalTgl').innerText = window.blockModalTglString;
+                document.getElementById('blockModal').style.display = 'flex';
+                setStatus('error', '⛔ Akses Ditolak');
+                document.getElementById('salesNet').readOnly = true;
+                document.getElementById('strukHariIni').readOnly = true;
+                document.getElementById('btnSimpan').disabled = true;
+                document.getElementById('btnSimpan').innerText = "DITOLAK ⛔";
+            } else if (action === 'exist') {
+                setStatus('success', '✅ Riwayat Ditemukan (Terkunci)'); 
+                document.getElementById('existModal').style.display = 'flex';
+                document.getElementById('salesNet').value = formatRibuan(dataLaporanTersimpan.salesNet);
+                document.getElementById('strukHariIni').value = formatRibuan(dataLaporanTersimpan.struk);
+                document.getElementById('salesNet').readOnly = true;
+                document.getElementById('strukHariIni').readOnly = true;
+                document.getElementById('btnSimpan').disabled = true;
+                document.getElementById('btnSimpan').innerText = "LAPORAN TERKUNCI 🔒";
+                // Munculkan kolom karena datanya sudah ada
+                document.getElementById('wrapStruk').className = 'box-section enter-4';
+                document.getElementById('wrapSystemData').className = 'box-section enter-1';
+            } else {
+                setStatus('success', '✅ Siap Buat Laporan');
+                document.getElementById('salesNet').readOnly = false;
+                document.getElementById('strukHariIni').readOnly = false;
+                document.getElementById('btnSimpan').disabled = false;
+                document.getElementById('btnSimpan').innerText = "PROSES LAPORAN";
+                cekKemajuanForm(); // Validasi ulang kemunculan kotak
+            }
+        }
+
         function tarikDataOtomatisDibalikLayar() {
             const tgl = document.getElementById('tanggal').value;
             if(!tgl) return;
             
-            document.getElementById('wrapStruk').className = 'box-section step-hidden';
-            document.getElementById('wrapSystemData').className = 'box-section step-hidden';
-            document.getElementById('salesNet').value = '';
-            document.getElementById('strukHariIni').value = '';
+            // Jika bukan initial load, sembunyikan form saat ganti tanggal
+            if (!isInitialLoad) {
+                document.getElementById('wrapStruk').className = 'box-section step-hidden';
+                document.getElementById('wrapSystemData').className = 'box-section step-hidden';
+                document.getElementById('salesNet').value = '';
+                document.getElementById('strukHariIni').value = '';
+            }
 
             setStatus('connecting', 'Sinkronisasi Cloud...', true);
             document.getElementById('btnSimpan').disabled = true; 
@@ -433,64 +496,43 @@
 
                     const tglVal = new Date(tgl);
                     const tglHarian = tglVal.getDate();
+                    let action = 'normal';
 
-                    // --- FITUR BARU: BLOKIR JIKA KEMARIN BELUM INPUT ---
+                    // Cek Blokir (Data Kemarin Bolong)
                     if(tglHarian !== 1 && data.akmSalesKemarin === 0 && !data.isSudahAda) {
+                        action = 'block';
                         let kemarinTgl = new Date(tglVal);
                         kemarinTgl.setDate(kemarinTgl.getDate() - 1);
-                        let strKemarinTampil = `${String(kemarinTgl.getDate()).padStart(2, '0')}-${String(kemarinTgl.getMonth() + 1).padStart(2, '0')}-${kemarinTgl.getFullYear()}`;
-                        
-                        document.getElementById('blockModalTgl').innerText = strKemarinTampil;
-                        document.getElementById('blockModal').style.display = 'flex';
-                        
-                        setStatus('error', '⛔ Akses Ditolak');
-                        document.getElementById('salesNet').readOnly = true;
-                        document.getElementById('strukHariIni').readOnly = true;
-                        document.getElementById('btnSimpan').disabled = true;
-                        document.getElementById('btnSimpan').innerText = "DITOLAK ⛔";
-                        return; // Hentikan proses
-                    }
-
-                    // --- JIKA LOLOS VALIDASI ---
-                    if (data.isSudahAda) {
+                        window.blockModalTglString = `${String(kemarinTgl.getDate()).padStart(2, '0')}-${String(kemarinTgl.getMonth() + 1).padStart(2, '0')}-${kemarinTgl.getFullYear()}`;
+                    } 
+                    // Cek History (Sudah Pernah Diisi)
+                    else if (data.isSudahAda) {
+                        action = 'exist';
                         dataLaporanTersimpan = data.dataHariIni;
-                        setStatus('success', '✅ Riwayat Ditemukan (Terkunci)'); 
-                        document.getElementById('existModal').style.display='flex';
-                        
-                        document.getElementById('salesNet').value = formatRibuan(dataLaporanTersimpan.salesNet);
-                        document.getElementById('strukHariIni').value = formatRibuan(dataLaporanTersimpan.struk);
-
-                        document.getElementById('salesNet').readOnly = true;
-                        document.getElementById('strukHariIni').readOnly = true;
-                        document.getElementById('btnSimpan').disabled = true;
-                        document.getElementById('btnSimpan').innerText = "LAPORAN TERKUNCI 🔒";
-                        
-                        document.getElementById('wrapStruk').className = 'box-section step-visible';
-                        document.getElementById('wrapSystemData').className = 'box-section step-visible';
-                    } else {
+                    } 
+                    // Form Bersih
+                    else {
+                        action = 'normal';
                         dataLaporanTersimpan = null;
-                        setStatus('success', '✅ Siap Buat Laporan');
-                        
-                        document.getElementById('salesNet').readOnly = false;
-                        document.getElementById('strukHariIni').readOnly = false;
-                        document.getElementById('btnSimpan').disabled = false;
-                        document.getElementById('btnSimpan').innerText = "PROSES LAPORAN";
                     }
+
+                    // TAHAN POPUP JIKA SEDANG ANIMASI LOADING AWAL
+                    if (isInitialLoad) {
+                        pendingModal = action;
+                    } else {
+                        terapkanStatusUI(action);
+                    }
+
                 }).catch(() => { 
                     setStatus('warning', '⚠️ Gunakan Data Manual'); 
-                    document.getElementById('btnSimpan').disabled = false; 
-                    document.getElementById('btnSimpan').innerText = "PROSES LAPORAN";
+                    if (!isInitialLoad) {
+                        document.getElementById('btnSimpan').disabled = false; 
+                        document.getElementById('btnSimpan').innerText = "PROSES LAPORAN";
+                    }
                 });
         }
 
-        function tarikDataOtomatis() { 
-            document.getElementById('wrapStruk').className = 'box-section step-hidden';
-            document.getElementById('wrapSystemData').className = 'box-section step-hidden';
-            document.getElementById('salesNet').value = '';
-            document.getElementById('strukHariIni').value = '';
-            tarikDataOtomatisDibalikLayar(); 
-        }
-        
+        function tarikDataOtomatis() { tarikDataOtomatisDibalikLayar(); }
         function tutupPopUpRiwayat() { document.getElementById('existModal').style.display = 'none'; }
 
         function praProsesLaporan() {
