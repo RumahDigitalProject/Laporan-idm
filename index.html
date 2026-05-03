@@ -272,7 +272,7 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLUGybVcGdNb8lGdIROQBWit7k9mc7Qv_03z92fVXRbzJ8H-qrX21pwAJUmknFR_ihRw/exec";
         const KODE_TOKO_PATEN = "T7Z4/MEDOKAN AYU";
-        const TARGET_SPD_FIXED = 20115238;
+        const TARGET_SPD_FIXED = 20132064;
         
         let dataLaporanTersimpan = null;
         let dataBulanLaluGlobal = { spd: 0, std: 0, apc: 0 };
@@ -484,8 +484,18 @@
             fetch(`${SCRIPT_URL}?action=getAutoData&tanggal=${tgl}`, { redirect: "follow" })
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById('akmSalesKemarin').value = formatRibuan(data.akmSalesKemarin);
-                    document.getElementById('akmStrukKemarin').value = formatRibuan(data.akmStrukKemarin);
+                    const tglVal = new Date(tgl);
+                    const tglHarian = tglVal.getDate();
+
+                    // === LOGIKA AKUMULASI OTOMATIS 0 JIKA TANGGAL 1 ===
+                    if (tglHarian === 1) {
+                        document.getElementById('akmSalesKemarin').value = "0";
+                        document.getElementById('akmStrukKemarin').value = "0";
+                    } else {
+                        document.getElementById('akmSalesKemarin').value = formatRibuan(data.akmSalesKemarin);
+                        document.getElementById('akmStrukKemarin').value = formatRibuan(data.akmStrukKemarin);
+                    }
+
                     document.getElementById('spdBulanLalu').value = formatRibuan(data.spdLalu);
                     document.getElementById('stdBulanLalu').value = formatRibuan(data.stdLalu);
                     document.getElementById('apcBulanLalu').value = formatRibuan(data.apcLalu);
@@ -494,8 +504,6 @@
                     dataBulanLaluGlobal.std = data.stdLalu;
                     dataBulanLaluGlobal.apc = data.apcLalu;
 
-                    const tglVal = new Date(tgl);
-                    const tglHarian = tglVal.getDate();
                     let action = 'normal';
 
                     // Cek Blokir (Data Kemarin Bolong)
@@ -589,16 +597,22 @@
 
         function eksekusiSimpanLaporan() {
             const net = hapusTitik(document.getElementById('salesNet').value);
-            const akmSalesKmrn = hapusTitik(document.getElementById('akmSalesKemarin').value);
+            let akmSalesKmrn = hapusTitik(document.getElementById('akmSalesKemarin').value);
             const struk = hapusTitik(document.getElementById('strukHariIni').value);
-            const akmStrukKmrn = hapusTitik(document.getElementById('akmStrukKemarin').value);
+            let akmStrukKmrn = hapusTitik(document.getElementById('akmStrukKemarin').value);
             const spdLalu = hapusTitik(document.getElementById('spdBulanLalu').value);
             const stdLalu = hapusTitik(document.getElementById('stdBulanLalu').value);
             const apcLalu = hapusTitik(document.getElementById('apcBulanLalu').value);
             const tglVal = new Date(document.getElementById('tanggal').value);
             const tglHarian = tglVal.getDate();
             
-            const akmSales = net + akmSalesKmrn;
+            // === LOGIKA AKUMULASI OTOMATIS 0 JIKA TANGGAL 1 ===
+            if (tglHarian === 1) {
+                akmSalesKmrn = 0;
+                akmStrukKmrn = 0;
+            }
+
+            const akmSales = net + akmSalesKmrn; 
             const spd = Math.round(akmSales / tglHarian);
             const akmStruk = struk + akmStrukKmrn;
             const std = Math.round(akmStruk / tglHarian);
@@ -668,3 +682,4 @@
     </script>
 </body>
 </html>
+
