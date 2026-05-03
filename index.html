@@ -125,7 +125,7 @@
         .hasil-manual { background-color: #f8f9fa; color: #333; font-weight: bold; border: 1px solid #ccc; }
 
         .btn-utama { width: 100%; background-color: #00529C; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-wa { width: 100%; background-color: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: block; text-align: center; }
+        .btn-wa { width: 100%; background-color: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
         .btn-kembali { width: 100%; background-color: #6c757d; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
         
         .black-divider { border: 0; height: 2px; background: #000; margin: 25px 0; }
@@ -282,17 +282,17 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLUGybVcGdNb8lGdIROQBWit7k9mc7Qv_03z92fVXRbzJ8H-qrX21pwAJUmknFR_ihRw/exec";
-        const KODE_TOKO_PATEN = "T7Z4/MEDOKAN AYU";
+        const KODE_TOKO_PATEN = "T7Z4 MEDOKAN AYU";
         const TARGET_SPD_FIXED = 20115238;
         
         let dataLaporanTersimpan = null;
         let dataBulanLaluGlobal = { spd: 0, std: 0, apc: 0 };
         
-        // VARIABEL FORMAT WA
+        // VARIABEL FORMAT WA BARU
         let formatWA1 = "";
         let formatWA2 = "";
+        let currentFormatTampil = 1;
         
-        // VARIABEL PENAHAN POPUP AGAR TIDAK MUNCUL DI TENGAH LOADING
         let isInitialLoad = true;
         let pendingModal = null; 
         
@@ -303,7 +303,6 @@
         function formatRibuan(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
         function hapusTitik(s) { return parseInt(s.toString().replace(/\./g, '')) || 0; }
         
-        // Listener Form Progresif
         document.querySelectorAll('.format-angka').forEach(i => { 
             i.addEventListener('input', function() { 
                 this.value = formatRibuan(this.value.replace(/[^0-9]/g, '')); 
@@ -311,32 +310,29 @@
             }); 
         });
 
-        // FUNGSI CEK FORM MUNCUL/HILANG OTOMATIS BERTAHAP LURUS
         function cekKemajuanForm() {
             const net = document.getElementById('salesNet').value;
             const struk = document.getElementById('strukHariIni').value;
 
-            // Logika Kotak Struk
             if(net.length > 0) {
                 if(document.getElementById('wrapStruk').classList.contains('step-hidden') || document.getElementById('wrapStruk').classList.contains('exit-3')){
-                    document.getElementById('wrapStruk').className = 'box-section enter-4'; // Masuk dari Kanan
+                    document.getElementById('wrapStruk').className = 'box-section enter-4';
                 }
             } else {
                 if(!document.getElementById('wrapStruk').classList.contains('step-hidden')){
-                    document.getElementById('wrapStruk').className = 'box-section exit-3'; // Hilang ke Kiri
+                    document.getElementById('wrapStruk').className = 'box-section exit-3'; 
                     setTimeout(() => { document.getElementById('wrapStruk').className = 'box-section step-hidden'; }, 600);
                 }
                 document.getElementById('strukHariIni').value = ''; 
             }
 
-            // Logika System Data & Tombol
             if(net.length > 0 && struk.length > 0) {
                 if(document.getElementById('wrapSystemData').classList.contains('step-hidden') || document.getElementById('wrapSystemData').classList.contains('exit-2')){
-                    document.getElementById('wrapSystemData').className = 'box-section enter-1'; // Masuk dari Bawah
+                    document.getElementById('wrapSystemData').className = 'box-section enter-1'; 
                 }
             } else {
                 if(!document.getElementById('wrapSystemData').classList.contains('step-hidden')){
-                    document.getElementById('wrapSystemData').className = 'box-section exit-2'; // Hilang ke Bawah
+                    document.getElementById('wrapSystemData').className = 'box-section exit-2'; 
                     setTimeout(() => { document.getElementById('wrapSystemData').className = 'box-section step-hidden'; }, 600);
                 }
             }
@@ -346,10 +342,8 @@
             const today = new Date();
             document.getElementById('tanggal').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
             
-            // Tarik Data (Pop-up akan ditahan oleh isInitialLoad = true)
             tarikDataOtomatisDibalikLayar(); 
 
-            // LOGIKA TERMINAL HACKER JALAN SANGAT CEPAT 
             const logs = [ 
                 "Memulai dekripsi satelit...", "Menyinkronkan T7Z4 ke mainframe...", "Bypass firewall proxy...", 
                 "Memuat array data [0x8A4B]...", "Mengekstrak AKM Sales...", "Validasi hash algoritma...", 
@@ -364,11 +358,9 @@
                 if(term.childElementCount > 8) term.removeChild(term.firstChild); 
             }, 50);
 
-            // LOGIKA ANIMASI KELUAR LURUS ACAK (SPLASH 5 DETIK SAJA)
             setTimeout(() => {
-                clearInterval(termInt); // Hentikan teks terminal
+                clearInterval(termInt); 
                 
-                // 1. Animasi Keluar Acak Lurus Elemen Splash
                 const exitClasses = ['exit-1', 'exit-2', 'exit-3', 'exit-4'];
                 const splashEls = ['splashLogo', 'splashProgress', 'terminalBox'];
                 splashEls.forEach((id, idx) => {
@@ -381,10 +373,9 @@
                     document.getElementById('splashScreen').style.display = 'none';
                     const fView = document.getElementById('formView');
                     fView.style.display = 'block';
-                    document.body.classList.add('form-mode'); // Aktifkan Blur
-                    fView.style.pointerEvents = 'none'; // Kunci layar
+                    document.body.classList.add('form-mode'); 
+                    fView.style.pointerEvents = 'none'; 
                     
-                    // 2. KILAS BALIK (PREVIEW MEMORI) 1 DETIK SAJA
                     let yest = new Date(); yest.setDate(yest.getDate() - 1);
                     document.getElementById('tanggal').value = `${yest.getFullYear()}-${String(yest.getMonth() + 1).padStart(2, '0')}-${String(yest.getDate()).padStart(2, '0')}`;
                     
@@ -400,7 +391,6 @@
                         }, idx * 100); 
                     });
                     
-                    // 3. HANCURKAN PREVIEW SETELAH 1 DETIK
                     setTimeout(() => {
                         wraps.forEach((id, idx) => {
                             setTimeout(() => {
@@ -409,22 +399,18 @@
                         });
                         
                         setTimeout(() => {
-                            // Kembalikan ke Hari Ini
                             document.getElementById('tanggal').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                             
-                            // Bersihkan form SEBELUM menerapkan status UI aslinya
                             document.getElementById('salesNet').value = '';
                             document.getElementById('strukHariIni').value = '';
                             document.getElementById('wrapStruk').className = 'box-section step-hidden';
                             document.getElementById('wrapSystemData').className = 'box-section step-hidden';
                             
-                            // Munculkan Tanggal dan SalesNet
-                            document.getElementById('wrapTanggal').className = 'box-section enter-2'; // Dari Atas
+                            document.getElementById('wrapTanggal').className = 'box-section enter-2'; 
                             setTimeout(() => {
-                                document.getElementById('wrapSalesNet').className = 'box-section enter-3'; // Dari Kiri
-                                fView.style.pointerEvents = 'auto'; // Buka kunci layar
+                                document.getElementById('wrapSalesNet').className = 'box-section enter-3'; 
+                                fView.style.pointerEvents = 'auto'; 
                                 
-                                // === FINAL: LEPASKAN PENAHAN POPUP SETELAH LOADING SELESAI ===
                                 isInitialLoad = false; 
                                 if (pendingModal) {
                                     terapkanStatusUI(pendingModal);
@@ -434,12 +420,12 @@
 
                             }, 300);
 
-                        }, 800); // Waktu nunggu hilang lurus
+                        }, 800); 
                         
-                    }, 1000); // DURASI KILAS BALIK HANYA 1 DETIK
+                    }, 1000); 
 
                 }, 800); 
-            }, 5000); // DURASI SPLASH 5 DETIK
+            }, 5000); 
         };
 
         function setStatus(tipe, pesan, showSpinner = false) {
@@ -448,7 +434,6 @@
             box.innerHTML = showSpinner ? `<div class="spinner"></div> ${pesan}` : pesan;
         }
 
-        // FUNGSI UNTUK MENERAPKAN KUNCI FORM & MEMUNCULKAN POPUP
         function terapkanStatusUI(action) {
             if (action === 'block') {
                 document.getElementById('blockModalTgl').innerText = window.blockModalTglString;
@@ -467,7 +452,6 @@
                 document.getElementById('strukHariIni').readOnly = true;
                 document.getElementById('btnSimpan').disabled = true;
                 document.getElementById('btnSimpan').innerText = "LAPORAN TERKUNCI 🔒";
-                // Munculkan kolom karena datanya sudah ada
                 document.getElementById('wrapStruk').className = 'box-section enter-4';
                 document.getElementById('wrapSystemData').className = 'box-section enter-1';
             } else {
@@ -476,7 +460,7 @@
                 document.getElementById('strukHariIni').readOnly = false;
                 document.getElementById('btnSimpan').disabled = false;
                 document.getElementById('btnSimpan').innerText = "PROSES LAPORAN";
-                cekKemajuanForm(); // Validasi ulang kemunculan kotak
+                cekKemajuanForm(); 
             }
         }
 
@@ -484,7 +468,6 @@
             const tgl = document.getElementById('tanggal').value;
             if(!tgl) return;
             
-            // Jika bukan initial load, sembunyikan form saat ganti tanggal
             if (!isInitialLoad) {
                 document.getElementById('wrapStruk').className = 'box-section step-hidden';
                 document.getElementById('wrapSystemData').className = 'box-section step-hidden';
@@ -502,7 +485,7 @@
                     const tglVal = new Date(tgl);
                     const tglHarian = tglVal.getDate();
 
-                    // === LOGIKA AKUMULASI OTOMATIS 0 JIKA TANGGAL 1 ===
+                    // --- LOGIKA TANGGAL 1 (AKM OTOMATIS 0) ---
                     if (tglHarian === 1) {
                         document.getElementById('akmSalesKemarin').value = "0";
                         document.getElementById('akmStrukKemarin').value = "0";
@@ -521,25 +504,21 @@
 
                     let action = 'normal';
 
-                    // Cek Blokir (Data Kemarin Bolong)
                     if(tglHarian !== 1 && data.akmSalesKemarin === 0 && !data.isSudahAda) {
                         action = 'block';
                         let kemarinTgl = new Date(tglVal);
                         kemarinTgl.setDate(kemarinTgl.getDate() - 1);
                         window.blockModalTglString = `${String(kemarinTgl.getDate()).padStart(2, '0')}-${String(kemarinTgl.getMonth() + 1).padStart(2, '0')}-${kemarinTgl.getFullYear()}`;
                     } 
-                    // Cek History (Sudah Pernah Diisi)
                     else if (data.isSudahAda) {
                         action = 'exist';
                         dataLaporanTersimpan = data.dataHariIni;
                     } 
-                    // Form Bersih
                     else {
                         action = 'normal';
                         dataLaporanTersimpan = null;
                     }
 
-                    // TAHAN POPUP JIKA SEDANG ANIMASI LOADING AWAL
                     if (isInitialLoad) {
                         pendingModal = action;
                     } else {
@@ -621,7 +600,7 @@
             const tglVal = new Date(document.getElementById('tanggal').value);
             const tglHarian = tglVal.getDate();
             
-            // === LOGIKA AKUMULASI OTOMATIS 0 JIKA TANGGAL 1 ===
+            // PENGAMANAN GANDA UNTUK TGL 1
             if (tglHarian === 1) {
                 akmSalesKmrn = 0;
                 akmStrukKmrn = 0;
@@ -652,13 +631,10 @@
             const achSpd = Math.floor((spd / TARGET_SPD_FIXED) * 100); 
             const acvSales = Math.floor((akmSales / targetTotalBulan) * 100);
             
-            // Format tanda (+) untuk format WA 2
             const growthSpd = spdLalu > 0 ? Math.round((spd / spdLalu * 100) - 100) : 0;
             const signSpd = growthSpd > 0 ? '+' : '';
-            
             const growthStd = stdLalu > 0 ? Math.round((std / stdLalu * 100) - 100) : 0;
             const signStd = growthStd > 0 ? '+' : '';
-            
             const growthApc = apcLalu > 0 ? Math.round((apc / apcLalu * 100) - 100) : 0;
             const signApc = growthApc > 0 ? '+' : '';
             
@@ -680,27 +656,94 @@
             document.getElementById('resApcLalu').value = formatRibuan(apcLalu);
             document.getElementById('resGrowthApc').value = growthApc + '%';
             
-            // MENYUSUN FORMAT WA 1 (ASLI MILIKMU)
+            // MEMBUAT FORMAT WA 1
             formatWA1 = `LAPORAN HARIAN TOKO\n\nKode/Nama Toko : ${KODE_TOKO_PATEN}\nTgl : ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}\n———————————— \nSales Net : ${formatRibuan(net)}\nStruk : ${formatRibuan(struk)}\nApc : ${formatRibuan(apc)}\nAkumulasi sales Net : ${formatRibuan(akmSales)}\nTarget total : ${formatRibuan(targetTotalBulan)}\nAcv sales : ${acvSales}%\nkekurangan target : ${formatRibuan(kurangTarget)}\nkekurangan target per day : ${formatRibuan(kurangPerDay)}\n————————\n- Target SPD : ${formatRibuan(TARGET_SPD_FIXED)}\n- Actual SPD : ${formatRibuan(spd)}\n- % Penc SPD : ${achSpd}%\n- SPD Bulan lalu : ${formatRibuan(spdLalu)}\n- Growth SPD : ${growthSpd}%\n- STD : ${formatRibuan(std)}\n- APC : ${formatRibuan(apc)}\nTerimakasihh`;
 
-            // MENYUSUN FORMAT WA 2 (BARU)
-            // Catatan: Karena web HTML ini tidak mendapat data histori tanggal 1,2,3 dari Google Sheet secara otomatis, 
-            // maka data harian yg bisa ditampilkan di bawah ini khusus data hari ini saja.
-            let listHarian = `[Catatan: List riwayat harian otomatis belum tersedia di sistem ini]\n${tglHarian}. ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}: ${formatRibuan(net)}/${formatRibuan(struk)}/${formatRibuan(apc)}`;
+            // MEMBUAT BASE FORMAT WA 2 
+            let baseFormat2 = `📌 LAPORAN SALES HARIAN TOKO 📌\n━━━━━━━━━━━━━━━━━━\n🆔 Kode/Nama Toko: ${KODE_TOKO_PATEN}\n📅 Tgl : ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}\n💰 Sales Net: ${formatRibuan(net)}\n🧾 Struk: ${formatRibuan(struk)}\n📊 APC: ${formatRibuan(apc)}\n\n📈 AKUMULASI (${tglHarian} hari)\n├ Target Total Sales: ${formatRibuan(targetTotalBulan)}\n├ Target SPD: ${formatRibuan(TARGET_SPD_FIXED)}\n├ SPD Bulan Lalu: ${formatRibuan(spdLalu)}\n├ Growth SPD: ${signSpd}${growthSpd}%\n├ Actual STD: ${formatRibuan(std)}\n├ STD Bulan Lalu: ${formatRibuan(stdLalu)}\n├ Growth STD: ${signStd}${growthStd}%\n├ Actual APC: ${formatRibuan(apc)}\n├ APC Bulan Lalu: ${formatRibuan(apcLalu)}\n└ Growth APC: ${signApc}${growthApc}%`;
 
-            formatWA2 = `📌 LAPORAN SALES HARIAN TOKO 📌\n━━━━━━━━━━━━━━━━━━\n🆔 Kode/Nama Toko: ${KODE_TOKO_PATEN}\n📅 Tgl : ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}\n💰 Sales Net: ${formatRibuan(net)}\n🧾 Struk: ${formatRibuan(struk)}\n📊 APC: ${formatRibuan(apc)}\n\n📈 AKUMULASI (${tglHarian} hari)\n├ Target Total Sales: ${formatRibuan(targetTotalBulan)}\n├ Target SPD: ${formatRibuan(TARGET_SPD_FIXED)}\n├ SPD Bulan Lalu: ${formatRibuan(spdLalu)}\n├ Growth SPD: ${signSpd}${growthSpd}%\n├ Actual STD: ${formatRibuan(std)}\n├ STD Bulan Lalu: ${formatRibuan(stdLalu)}\n├ Growth STD: ${signStd}${growthStd}%\n├ Actual APC: ${formatRibuan(apc)}\n├ APC Bulan Lalu: ${formatRibuan(apcLalu)}\n└ Growth APC: ${signApc}${growthApc}%\n\n📅 SALES HARIAN (Tgl/Sales/Struk/APC)\n━━━━━━━━━━━━━━━━━━\n${listHarian}`;
+            // Set loading text dulu sementara sistem menarik riwayat dari Google Sheet
+            formatWA2 = baseFormat2 + `\n\n📅 SALES HARIAN (Tgl/Sales/Struk/APC)\n━━━━━━━━━━━━━━━━━━\n[Sedang menarik riwayat data dari server... ⏳]`;
 
-            document.getElementById('teksWa').value = formatWA1; // Default
+            // Panggil fungsi penarik riwayat rahasia
+            tarikRiwayatHarianUntukWA(net, struk, apc, tglVal, baseFormat2);
+
+            document.getElementById('teksWa').value = formatWA1;
+            currentFormatTampil = 1;
+
             document.body.classList.add('hasil-mode');
             document.getElementById('formView').style.display = 'none'; 
             document.getElementById('hasilView').style.display = 'block'; 
             window.scrollTo(0,0);
         }
 
-        // FUNGSI PILIH FORMAT WA
+        // --- SISTEM TARIK RIWAYAT OTOMATIS (KHUSUS WA 2) ---
+        async function tarikRiwayatHarianUntukWA(net, struk, apc, tglVal, baseFormat2) {
+            const tglHarian = tglVal.getDate();
+            const tahun = tglVal.getFullYear();
+            const bulan = tglVal.getMonth() + 1;
+            const strBulan = String(bulan).padStart(2,'0');
+
+            let riwayatArr = [];
+            let stringHariIni = `${tglHarian}. ${String(tglHarian).padStart(2,'0')}-${strBulan}-${tahun}: ${formatRibuan(net)}/${formatRibuan(struk)}/${formatRibuan(apc)}`;
+            riwayatArr.push({tgl: tglHarian, text: stringHariIni});
+            
+            // Simpan riwayat hari ini ke memori HP agar besok langsung instan
+            localStorage.setItem(`RWYT_${tahun}_${strBulan}_${tglHarian}`, stringHariIni);
+
+            let promises = [];
+            for(let i=1; i<tglHarian; i++) {
+                let key = `RWYT_${tahun}_${strBulan}_${i}`;
+                let cached = localStorage.getItem(key);
+                if(cached) {
+                    riwayatArr.push({tgl: i, text: cached});
+                } else {
+                    // Tarik diam-diam dari server jika tidak ada di memori
+                    let tglCek = `${tahun}-${strBulan}-${String(i).padStart(2,'0')}`;
+                    promises.push(
+                        fetch(`${SCRIPT_URL}?action=getAutoData&tanggal=${tglCek}`, { redirect: "follow" })
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data.isSudahAda && data.dataHariIni) {
+                                let sn = data.dataHariIni.salesNet || 0;
+                                let st = data.dataHariIni.struk || 0;
+                                let a = st > 0 ? Math.round(sn/st) : 0;
+                                let txt = `${i}. ${String(i).padStart(2,'0')}-${strBulan}-${tahun}: ${formatRibuan(sn)}/${formatRibuan(st)}/${formatRibuan(a)}`;
+                                localStorage.setItem(key, txt); // Simpan ke memori HP
+                                return {tgl: i, text: txt};
+                            }
+                            return {tgl: i, text: `${i}. ${String(i).padStart(2,'0')}-${strBulan}-${tahun}: 0/0/0`};
+                        }).catch(() => {
+                            return {tgl: i, text: `${i}. ${String(i).padStart(2,'0')}-${strBulan}-${tahun}: (Gagal memuat)`};
+                        })
+                    );
+                }
+            }
+
+            // Tunggu semua data tertarik
+            if(promises.length > 0) {
+                let results = await Promise.all(promises);
+                results.forEach(r => { if(r) riwayatArr.push(r); });
+            }
+
+            // Urutkan dari tgl 1 ke tgl terbaru
+            riwayatArr.sort((a,b) => a.tgl - b.tgl);
+            let listHarian = riwayatArr.map(r => r.text).join('\n');
+
+            // Gabungkan hasilnya
+            formatWA2 = baseFormat2 + "\n\n📅 SALES HARIAN (Tgl/Sales/Struk/APC)\n━━━━━━━━━━━━━━━━━━\n" + listHarian;
+            
+            // Update teks otomatis jika user sedang membuka WA 2
+            if(currentFormatTampil === 2) {
+                document.getElementById('teksWa').value = formatWA2;
+            }
+        }
+
+        // FUNGSI GANTI FORMAT WA SAAT TOMBOL DIKLIK
         function bukaLaporanWA(tipe) { 
             document.getElementById('hasilView').style.display = 'none'; 
             document.getElementById('waView').style.display = 'block'; 
+            currentFormatTampil = tipe;
             document.getElementById('teksWa').value = (tipe === 2) ? formatWA2 : formatWA1;
             window.scrollTo(0,0); 
         }
