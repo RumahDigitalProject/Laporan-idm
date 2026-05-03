@@ -125,7 +125,7 @@
         .hasil-manual { background-color: #f8f9fa; color: #333; font-weight: bold; border: 1px solid #ccc; }
 
         .btn-utama { width: 100%; background-color: #00529C; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-wa { width: 100%; background-color: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; cursor: pointer; }
+        .btn-wa { width: 100%; background-color: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: block; text-align: center; }
         .btn-kembali { width: 100%; background-color: #6c757d; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
         
         .black-divider { border: 0; height: 2px; background: #000; margin: 25px 0; }
@@ -264,18 +264,33 @@
             <div class="form-group"><label>APC Lalu</label><input type="text" id="resApcLalu" class="readonly-input" readonly></div>
             <div class="form-group full-width"><label>Growth (%)</label><input type="text" id="resGrowthApc" class="auto-calc" readonly></div>
         </div>
-        <div style="margin-top:25px;"><button class="btn-wa" onclick="bukaLaporanWA()">SALIN KE WA 📲</button><button class="btn-kembali" onclick="tutupLaporan()">TUTUP & SELESAI ❌</button></div>
+        <div style="margin-top:25px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button class="btn-wa" style="flex: 1; margin: 0; font-size: 0.9rem;" onclick="bukaLaporanWA(1)">WA FORMAT 1</button>
+                <button class="btn-wa" style="flex: 1; margin: 0; font-size: 0.9rem; background-color: #128C7E;" onclick="bukaLaporanWA(2)">WA FORMAT 2</button>
+            </div>
+            <button class="btn-kembali" onclick="tutupLaporan()">TUTUP & SELESAI ❌</button>
+        </div>
     </div>
 
-    <div id="waView" class="box-section" style="margin: 10px; max-width: 600px; margin-left: auto; margin-right: auto;"><h2>Format WA</h2><textarea id="teksWa" readonly></textarea><button class="btn-utama" onclick="copyKeClipboard()">Copy WA</button><button class="btn-kembali" style="margin-top:10px;" onclick="kembaliKeHasil()">Kembali</button></div>
+    <div id="waView" class="box-section" style="margin: 10px; max-width: 600px; margin-left: auto; margin-right: auto;">
+        <h2>Format WA</h2>
+        <textarea id="teksWa" readonly></textarea>
+        <button class="btn-utama" onclick="copyKeClipboard()">Copy WA</button>
+        <button class="btn-kembali" style="margin-top:10px;" onclick="kembaliKeHasil()">Kembali</button>
+    </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLUGybVcGdNb8lGdIROQBWit7k9mc7Qv_03z92fVXRbzJ8H-qrX21pwAJUmknFR_ihRw/exec";
         const KODE_TOKO_PATEN = "T7Z4/MEDOKAN AYU";
-        const TARGET_SPD_FIXED = 20132064;
+        const TARGET_SPD_FIXED = 20115238;
         
         let dataLaporanTersimpan = null;
         let dataBulanLaluGlobal = { spd: 0, std: 0, apc: 0 };
+        
+        // VARIABEL FORMAT WA
+        let formatWA1 = "";
+        let formatWA2 = "";
         
         // VARIABEL PENAHAN POPUP AGAR TIDAK MUNCUL DI TENGAH LOADING
         let isInitialLoad = true;
@@ -286,7 +301,7 @@
         const robotExpressions = ["🤖", "🧐", "⚙️", "🔧", "💻", "📊", "🚀", "✅"];
 
         function formatRibuan(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
-        function hapusTitik(s) { return parseInt(s.replace(/\./g, '')) || 0; }
+        function hapusTitik(s) { return parseInt(s.toString().replace(/\./g, '')) || 0; }
         
         // Listener Form Progresif
         document.querySelectorAll('.format-angka').forEach(i => { 
@@ -636,11 +651,20 @@
             const targetTotalBulan = TARGET_SPD_FIXED * hariBulan;
             const achSpd = Math.floor((spd / TARGET_SPD_FIXED) * 100); 
             const acvSales = Math.floor((akmSales / targetTotalBulan) * 100);
+            
+            // Format tanda (+) untuk format WA 2
             const growthSpd = spdLalu > 0 ? Math.round((spd / spdLalu * 100) - 100) : 0;
+            const signSpd = growthSpd > 0 ? '+' : '';
+            
+            const growthStd = stdLalu > 0 ? Math.round((std / stdLalu * 100) - 100) : 0;
+            const signStd = growthStd > 0 ? '+' : '';
+            
+            const growthApc = apcLalu > 0 ? Math.round((apc / apcLalu * 100) - 100) : 0;
+            const signApc = growthApc > 0 ? '+' : '';
+            
             const kurangTarget = targetTotalBulan - akmSales;
             const kurangPerDay = (hariBulan - tglHarian) > 0 ? Math.round(kurangTarget / (hariBulan - tglHarian)) : 0;
-            const growthStd = stdLalu > 0 ? Math.round((std / stdLalu * 100) - 100) : 0;
-            const growthApc = apcLalu > 0 ? Math.round((apc / apcLalu * 100) - 100) : 0;
+            
             document.getElementById('resSalesNet').value = formatRibuan(net);
             document.getElementById('resAkmSales').value = formatRibuan(akmSales);
             document.getElementById('resSpd').value = formatRibuan(spd);
@@ -655,12 +679,30 @@
             document.getElementById('resApc').value = formatRibuan(apc);
             document.getElementById('resApcLalu').value = formatRibuan(apcLalu);
             document.getElementById('resGrowthApc').value = growthApc + '%';
-            const teksWA = `LAPORAN HARIAN TOKO\n\nKode/Nama Toko : ${KODE_TOKO_PATEN}\nTgl : ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}\n———————————— \nSales Net : ${formatRibuan(net)}\nStruk : ${formatRibuan(struk)}\nApc : ${formatRibuan(apc)}\nAkumulasi sales Net : ${formatRibuan(akmSales)}\nTarget total : ${formatRibuan(targetTotalBulan)}\nAcv sales : ${acvSales}%\nkekurangan target : ${formatRibuan(kurangTarget)}\nkekurangan target per day : ${formatRibuan(kurangPerDay)}\n————————\n- Target SPD : ${formatRibuan(TARGET_SPD_FIXED)}\n- Actual SPD : ${formatRibuan(spd)}\n- % Penc SPD : ${achSpd}%\n- SPD Bulan lalu : ${formatRibuan(spdLalu)}\n- Growth SPD : ${growthSpd}%\n- STD : ${formatRibuan(std)}\n- APC : ${formatRibuan(apc)}\nTerimakasihh`;
-            document.getElementById('teksWa').value = teksWA;
+            
+            // MENYUSUN FORMAT WA 1 (ASLI MILIKMU)
+            formatWA1 = `LAPORAN HARIAN TOKO\n\nKode/Nama Toko : ${KODE_TOKO_PATEN}\nTgl : ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}\n———————————— \nSales Net : ${formatRibuan(net)}\nStruk : ${formatRibuan(struk)}\nApc : ${formatRibuan(apc)}\nAkumulasi sales Net : ${formatRibuan(akmSales)}\nTarget total : ${formatRibuan(targetTotalBulan)}\nAcv sales : ${acvSales}%\nkekurangan target : ${formatRibuan(kurangTarget)}\nkekurangan target per day : ${formatRibuan(kurangPerDay)}\n————————\n- Target SPD : ${formatRibuan(TARGET_SPD_FIXED)}\n- Actual SPD : ${formatRibuan(spd)}\n- % Penc SPD : ${achSpd}%\n- SPD Bulan lalu : ${formatRibuan(spdLalu)}\n- Growth SPD : ${growthSpd}%\n- STD : ${formatRibuan(std)}\n- APC : ${formatRibuan(apc)}\nTerimakasihh`;
+
+            // MENYUSUN FORMAT WA 2 (BARU)
+            // Catatan: Karena web HTML ini tidak mendapat data histori tanggal 1,2,3 dari Google Sheet secara otomatis, 
+            // maka data harian yg bisa ditampilkan di bawah ini khusus data hari ini saja.
+            let listHarian = `[Catatan: List riwayat harian otomatis belum tersedia di sistem ini]\n${tglHarian}. ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}: ${formatRibuan(net)}/${formatRibuan(struk)}/${formatRibuan(apc)}`;
+
+            formatWA2 = `📌 LAPORAN SALES HARIAN TOKO 📌\n━━━━━━━━━━━━━━━━━━\n🆔 Kode/Nama Toko: ${KODE_TOKO_PATEN}\n📅 Tgl : ${String(tglHarian).padStart(2,'0')}-${String(tglVal.getMonth()+1).padStart(2,'0')}-${tglVal.getFullYear()}\n💰 Sales Net: ${formatRibuan(net)}\n🧾 Struk: ${formatRibuan(struk)}\n📊 APC: ${formatRibuan(apc)}\n\n📈 AKUMULASI (${tglHarian} hari)\n├ Target Total Sales: ${formatRibuan(targetTotalBulan)}\n├ Target SPD: ${formatRibuan(TARGET_SPD_FIXED)}\n├ SPD Bulan Lalu: ${formatRibuan(spdLalu)}\n├ Growth SPD: ${signSpd}${growthSpd}%\n├ Actual STD: ${formatRibuan(std)}\n├ STD Bulan Lalu: ${formatRibuan(stdLalu)}\n├ Growth STD: ${signStd}${growthStd}%\n├ Actual APC: ${formatRibuan(apc)}\n├ APC Bulan Lalu: ${formatRibuan(apcLalu)}\n└ Growth APC: ${signApc}${growthApc}%\n\n📅 SALES HARIAN (Tgl/Sales/Struk/APC)\n━━━━━━━━━━━━━━━━━━\n${listHarian}`;
+
+            document.getElementById('teksWa').value = formatWA1; // Default
             document.body.classList.add('hasil-mode');
             document.getElementById('formView').style.display = 'none'; 
             document.getElementById('hasilView').style.display = 'block'; 
             window.scrollTo(0,0);
+        }
+
+        // FUNGSI PILIH FORMAT WA
+        function bukaLaporanWA(tipe) { 
+            document.getElementById('hasilView').style.display = 'none'; 
+            document.getElementById('waView').style.display = 'block'; 
+            document.getElementById('teksWa').value = (tipe === 2) ? formatWA2 : formatWA1;
+            window.scrollTo(0,0); 
         }
 
         function tutupLaporan() { 
@@ -676,10 +718,8 @@
             }, 300); 
         }
         
-        function bukaLaporanWA() { document.getElementById('hasilView').style.display = 'none'; document.getElementById('waView').style.display = 'block'; window.scrollTo(0,0); }
         function kembaliKeHasil() { document.getElementById('waView').style.display = 'none'; document.getElementById('hasilView').style.display = 'block'; window.scrollTo(0,0); }
         function copyKeClipboard() { const t = document.getElementById('teksWa'); t.select(); t.setSelectionRange(0, 99999); navigator.clipboard.writeText(t.value).then(() => alert("Tersalin!")); }
     </script>
 </body>
 </html>
-
